@@ -80,6 +80,13 @@ function GameView(){
 	return (
 	<div className={style.wrap}>
 		Proba {allCards?.rows.length} 
+		
+		{allCards?.rows.map(row => { return <div className={style.oneRow}> 
+			{row?.map(imageSource => {return <img src={imageSource} width="100px" height="100px" />})} 
+		</div>
+		})}
+		
+		
 		<img src={allCards?.rows[0][1]} height="100px" width="100px"  />
 		<img src={allCards?.rows[0][0]}  height="100px" width="100px" />
 		
@@ -93,5 +100,34 @@ function GameView(){
 
 export default GameView;
 
+
+/* 
+{allCards?.rows.map(row => { return 
+				<div className={style.oneRow} > 
+					<h3> Red </h3>
+					{row?.map(imageSource => {return 
+						<img src={imageSource} height="100px" width="100px" />
+					})}
+				</div>
+			
+		})}
+*/
+
+/*
+
+{allCards?.rows.map(row => { return 
+			<div className={style.oneRow}>
+				{row?.map(imageSource => {return <img src={imageSource} />})}
+			</div>
+			})
+		}
+		
+*/
+
+/*
+{allCards?.rows.map(row => { return <div className={style.oneRow}> Red 
+</div>
+})}
+*/
 
 
