@@ -4,7 +4,13 @@ import {useRef, useEffect, useState } from 'react';
 import GameView from './GameView.jsx';
 import style from './MainView.css';
 
+function betWon(whichWin){
+	alert("Bet won: " + whichWin);
+}
 
+function betLost(){
+	alert("Bet lost");
+}
 
 function MainView(){
 
@@ -22,20 +28,26 @@ function MainView(){
 	        const newDigit = parseInt(event.key);
 	        const newAmountToBet = amountToBet * 10 + newDigit;
 	        	        
-	        if (newAmountToBet > credit){
+	        if (newAmountToBet > credit || newAmountToBet < 1){
 	        	event.preventDefault();
 	        }
 	}
 	
+	function changeAmountToBet(newAmountToBet){
+		if (newAmountToBet >= 1 && newAmountToBet <= credit){
+			setAmountToBet(newAmountToBet);
+		}
+	}
+	
 	const [credit, setCredit] = useState(START_CREDIT);
-	const [amountToBet, setAmountToBet] = useState(0);
+	const [amountToBet, setAmountToBet] = useState(1);
 	const [lastCreditChange, setLastCreditChange] = useState(0);
 	
 
 	return (
 	<div className={style.wrap}>
 		<div className={style.up} >
-			<GameView />		
+			<GameView betWonCallback={betWon} betLostCallback={betLost}/>	
 		</div>
 		
 		<div className={style.down} >
@@ -46,7 +58,7 @@ function MainView(){
 			<div className={style.amountToBet} >
 				<input	type="number" onKeyPress={event => {validateInputNumber(event, parseInt(amountToBet), credit)}}
       					value={amountToBet} 
-      					onChange={event => parseInt(setAmountToBet(event.target.value || 0))} 	
+      					onChange={event => changeAmountToBet(parseInt(event.target.value || 1))} 	
     				/>
 			</div>
 			

@@ -34,26 +34,206 @@ function getPictureRectangle(containerRectangle, pictureRectangle, pictureToCont
 
 const NUMBER_OF_ROWS = 3;
 const NUMBER_OF_COLUMNS = 5;
+const NUMBER_OF_MAX_CONSECUTIVE_LOSSES = 3;
+const THREE_SECONDS = 3000;
 
-function GameView(){
+const SMALL_WIN = 1;
+const MEDIUM_WIN = 2;
+const BIG_WIN = 3;
+const LOSS = -1;
+
+const WIN_PERCENTAGE = 33;
+const BIG_WIN_PERCENTAGE = 20;
+const MEDIUM_WIN_PERCENTAGE = 30;
+const SMALL_WIN_PERCENTAGE = 50;
+
+function doWin(betWonCallback, betsSinceWin, setAllCards){
+	betsSinceWin.current = 0;
+	const whichWin = calculateWhichWin();
+	displayWin(whichWin, setAllCards);
+	betWonCallback(whichWin);
+}
+
+function calculateWhichWin(){
+	const randomNumber = Math.random() * 100;
+	if (randomNumber < BIG_WIN_PERCENTAGE){
+		return BIG_WIN;
+	}
+	if (randomNumber < BIG_WIN_PERCENTAGE + MEDIUM_WIN_PERCENTAGE){
+		return MEDIUM_WIN;
+	}
+	return SMALL_WIN;
+}
+
+
+function clientHasWon(){
+	const randomNumber = Math.random() * 100;
+	if (randomNumber < WIN_PERCENTAGE){
+		return true; 
+	} 
+	return false;
+}
+
+function chooseRandomPosition(){
+	let randomRow = Math.round(Math.random() * NUMBER_OF_ROWS);
+	let randomColumn = Math.round(Math.random () * (NUMBER_OF_COLUMNS - NUMBER_OF_CARDS_TO_WIN + 1));
+	return [randomRow, randomColumn];
+}
+
+function chooseWinningCard(whichWin){
+	const picturesToChooseFrom = allPictures.filter(p => p.tier === whichWin);
+	const randomIndex = Math.round(Math.random() * picturesToChooseFrom.length);
+	return picturesToChooseFrom[randomIndex];
+}
+
+function randomlyChooseACard(){
+	const randomIndex = Math.round(Math.random() * allPictures.length);
+	return allPictures[randomIndex];
+}
+
+function displayWin(whichWin, setAllCards){
+	const winningCard = chooseWinningCard(whichWin);
+	const [row, column] = chooseRandomPosition();
+	
+	const newCards = calculateNewCards(winningCard, {row, column});
+	setAllCards(newCards);
+}
+
+function calculateNewCards(winningCard, rowColumn){
+	let newCards = {rows: []};
+	
+	for(let i=0; i<NUMBER_OF_ROWS; i++){
+		newCards.rows[i] = [];
+		
+		if (i != rowColumn.row){
+			newCards.rows[i] = getLosingRow();
+		} else {
+			newCards.rows[i] = getWinningRow(winningCard, rowColumn.column);
+		}
+	}
+	
+	return newCards;
+}
+
+function getLosingRow(){
+	let losingRow = [];
+	
+	for(let i=0; i < 2; i++){
+		losingRow[i] = randomlyChooseACard().src;
+	}
+	
+	for(let i=2; i < NUMBER_OF_COLUMNS; i++){
+		if (losingRow[i-1] === losingRow[i-2]){
+			const potentialCards = allPictures.filter(p => p.src != losingRow[i-1]);
+			const randomCard = getRandomElement(potentialCards);
+			losingRow[i] = randomCard.src;
+		} else {
+			losingRow[i] = randomlyChooseACard().src;
+		}
+	}
+	
+	return losingRow;
+}
+
+function getRandomElement(array){
+	const randomIndex = Math.round(Math.random() * array.length);
+	return array[randomIndex];
+}
+
+function displayLoss(setAllCards){
+	const cards = getLosingCards();
+	setAllCards(cards);
+}
+
+function getLosingCards(){
+	let cards = {rows: []};
+	for(let i=0; i < NUMBER_OF_ROWS; i++){
+		cards.rows[i] = [];
+		cards.rows[i] = getLosingRow();
+	}
+	return cards;
+}
+
+function getWinningRow(winningCard, column){
+	let winningRow = [];
+	
+	let columnStart = column;
+	let columnEnd = column + NUMBER_OF_CARDS_TO_WIN - 1;
+	
+	
+	for(let i=0; i < NUMBER_OF_COLUMNS; i++){
+		if (i >= columnStart && i <= columnEnd){
+			winningRow[i] = winningCard.src;
+		} else if (i < 2){
+			winningRow[i] = randomlyChooseACard().src;
+		} else if (winningRow[i-1] !== winningRow[i-2]){
+			winningRow[i] = randomlyChooseACard().src;
+		}else{
+			const potentialCards = allPictures.filter(p => p.src != winningRow[i-1]);
+			const randomCard = getRandomElement(potentialCards);
+			winningRow[i] = randomCard.src;
+		}
+	}
+	
+	return winningRow;
+}
+
+const NUMBER_OF_CARDS_TO_WIN = 3;
+
+const allPictures = [
+	{src: '/number2.png', tier: SMALL_WIN},
+	{src: '/number3.png', tier: SMALL_WIN},
+	{src: '/number5.png', tier: SMALL_WIN},
+	{src: '/number6.png', tier: SMALL_WIN},
+	
+	{src: '/ball.png', tier: MEDIUM_WIN},
+	{src: '/bucketScored.png', tier: MEDIUM_WIN},
+	{src: '/hoopAndBall.png', tier: MEDIUM_WIN},
+	
+	{src: '/gold.png', tier: BIG_WIN},
+	{src: '/bagOfGold.png', tier: BIG_WIN}];
+	
+function displayNoCards(xPicture, setAllCards){
+	let tempAllCards = {rows : []};
+	for(let i=0; i < NUMBER_OF_ROWS; i++){
+		tempAllCards.rows[i] = [];
+		for(let j=0; j < NUMBER_OF_COLUMNS; j++){
+			tempAllCards.rows[i][j] = xPicture;
+		}
+	}
+	setAllCards(tempAllCards);
+}
+
+function GameView(props){
+
+	function startBet(){
+		displayNoCards(xPicture, setAllCards);
+		
+		setTimeout(() => {
+			if (betsSinceWin.current > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
+				doWin(props.betWonCallback, betsSinceWin, setAllCards);	
+			} else {
+				const clientWon = clientHasWon();
+				if (clientWon){
+					doWin(props.betWonCallback, betsSinceWin, setAllCards);
+				} else {
+					betsSinceWin.current += 1;
+					displayLoss(setAllCards);
+					props.betLostCallback();
+				}
+			}
+		}, THREE_SECONDS);
+	}
+	
+	let betsSinceWin = useRef(0);
+	
 	
 	const containerRectangle = {width: 50, height: 50};
 	const pictureToContainerRatio = 0.8;
 	const pictureRectangleRatio = {width: 1, height: 1};
 	const pictureRectangle = getPictureRectangle(containerRectangle, pictureRectangleRatio, pictureToContainerRatio);
 	
-	const allPictures = [
-	{src: '/number2.png', tier: 1},
-	{src: '/number3.png', tier: 1},
-	{src: '/number5.png', tier: 1},
-	{src: '/number6.png', tier: 1},
-	
-	{src: '/ball.png', tier: 2},
-	{src: '/bucketScored.png', tier: 2},
-	{src: '/hoopAndBall.png', tier: 2},
-	
-	{src: '/gold.png', tier: 3},
-	{src: '/bagOfGold.png', tier: 3}];	
+		
 	
 	const xPicture = '/xPicture.png';
 	
@@ -63,34 +243,24 @@ function GameView(){
 	const [allCards, setAllCards] = useState(null);
 	
 	useEffect(() => {
-		let tempAllCards = {rows : []};
-		for(let i=0; i < NUMBER_OF_ROWS; i++){
-			tempAllCards.rows[i] = [];
-			for(let j=0; j < NUMBER_OF_COLUMNS; j++){
-				tempAllCards.rows[i][j] = xPicture;
-			}
-		}
-		setAllCards(tempAllCards);
-		
-		
-	});
+		displayNoCards(xPicture, setAllCards);	
+	}, []);
 	
 
 	
 	return (
 	<div className={style.wrap}>
-		Proba {allCards?.rows.length} 
 		
-		{allCards?.rows.map(row => { return <div className={style.oneRow}> 
-			{row?.map(imageSource => {return <img src={imageSource} width="100px" height="100px" />})} 
+		<div className={style.rowsWrap} >
+			{allCards?.rows.map(row => { return <div className={style.oneRow}> 
+				{row?.map(imageSource => {return <img src={imageSource} width="100px" height="100px" />})} 
+				</div>
+			})}
 		</div>
-		})}
 		
-		
-		<img src={allCards?.rows[0][1]} height="100px" width="100px"  />
-		<img src={allCards?.rows[0][0]}  height="100px" width="100px" />
-		
-	
+		<div className={style.button}>
+			<button onClick={startBet}> IGRAJ </button>
+		</div>
 	</div>
 	);
 	
@@ -99,35 +269,5 @@ function GameView(){
 }
 
 export default GameView;
-
-
-/* 
-{allCards?.rows.map(row => { return 
-				<div className={style.oneRow} > 
-					<h3> Red </h3>
-					{row?.map(imageSource => {return 
-						<img src={imageSource} height="100px" width="100px" />
-					})}
-				</div>
-			
-		})}
-*/
-
-/*
-
-{allCards?.rows.map(row => { return 
-			<div className={style.oneRow}>
-				{row?.map(imageSource => {return <img src={imageSource} />})}
-			</div>
-			})
-		}
-		
-*/
-
-/*
-{allCards?.rows.map(row => { return <div className={style.oneRow}> Red 
-</div>
-})}
-*/
 
 
