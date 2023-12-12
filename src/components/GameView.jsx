@@ -2,7 +2,7 @@
 
 
 import {useRef, useEffect, useState } from 'react';
-import style from './GameView.css';
+import './GameView.css';
 
 
 function getPictureRectangle(containerRectangle, pictureRectangle, pictureToContainerRatio){
@@ -119,16 +119,16 @@ function getLosingRow(){
 	let losingRow = [];
 	
 	for(let i=0; i < 2; i++){
-		losingRow[i] = randomlyChooseACard().src;
+		losingRow[i] = {src: randomlyChooseACard().src};
 	}
 	
 	for(let i=2; i < NUMBER_OF_COLUMNS; i++){
-		if (losingRow[i-1] === losingRow[i-2]){
-			const potentialCards = allPictures.filter(p => p.src != losingRow[i-1]);
+		if (losingRow[i-1].src === losingRow[i-2].src){
+			const potentialCards = allPictures.filter(p => p.src != losingRow[i-1].src);
 			const randomCard = getRandomElement(potentialCards);
-			losingRow[i] = randomCard.src;
+			losingRow[i] = {src: randomCard.src};
 		} else {
-			losingRow[i] = randomlyChooseACard().src;
+			losingRow[i] = {src: randomlyChooseACard().src};
 		}
 	}
 	
@@ -163,15 +163,15 @@ function getWinningRow(winningCard, column){
 	
 	for(let i=0; i < NUMBER_OF_COLUMNS; i++){
 		if (i >= columnStart && i <= columnEnd){
-			winningRow[i] = winningCard.src;
+			winningRow[i] = {src: winningCard.src, winCard: true};
 		} else if (i < 2){
-			winningRow[i] = randomlyChooseACard().src;
-		} else if (winningRow[i-1] !== winningRow[i-2]){
-			winningRow[i] = randomlyChooseACard().src;
+			winningRow[i] = {src: randomlyChooseACard().src};
+		} else if (winningRow[i-1].src !== winningRow[i-2].src){
+			winningRow[i] = {src: randomlyChooseACard().src};
 		}else{
-			const potentialCards = allPictures.filter(p => p.src != winningRow[i-1]);
+			const potentialCards = allPictures.filter(p => p.src != winningRow[i-1].src);
 			const randomCard = getRandomElement(potentialCards);
-			winningRow[i] = randomCard.src;
+			winningRow[i] = {src: randomCard.src};
 		}
 	}
 	
@@ -198,7 +198,7 @@ function displayNoCards(xPicture, setAllCards){
 	for(let i=0; i < NUMBER_OF_ROWS; i++){
 		tempAllCards.rows[i] = [];
 		for(let j=0; j < NUMBER_OF_COLUMNS; j++){
-			tempAllCards.rows[i][j] = xPicture;
+			tempAllCards.rows[i][j] = {src: xPicture};
 		}
 	}
 	setAllCards(tempAllCards);
@@ -249,16 +249,17 @@ function GameView(props){
 
 	
 	return (
-	<div className={style.wrap}>
+	<div className="wrap">
 		
-		<div className={style.rowsWrap} >
-			{allCards?.rows.map(row => { return <div className={style.oneRow}> 
-				{row?.map(imageSource => {return <img src={imageSource} width="100px" height="100px" />})} 
+		<div className="rowsWrap" >
+			{allCards?.rows.map(row => { return <div className="oneRow"> 
+				{row?.map(imageInfo => {return <div className={imageInfo.winCard? 'winCard' : ''} width="120px" height="120px"><img src={imageInfo.src} width="100px" height="100px" 
+					className={imageInfo.winCard? "winCard" : ''}/> </div>})} 
 				</div>
 			})}
 		</div>
 		
-		<div className={style.button}>
+		<div className="button">
 			<button onClick={startBet}> IGRAJ </button>
 		</div>
 	</div>
