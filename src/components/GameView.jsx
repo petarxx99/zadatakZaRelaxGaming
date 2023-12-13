@@ -31,6 +31,9 @@ function getPictureRectangle(containerRectangle, pictureRectangle, pictureToCont
 	return calculatedPictureRectangle;
 }
 
+function round2decimals(number){
+	return Math.round(number * 100.0) / 100.0;
+}
 
 const NUMBER_OF_ROWS = 3;
 const NUMBER_OF_COLUMNS = 5;
@@ -46,17 +49,82 @@ const WIN_PERCENTAGE = 33;
 const BIG_WIN_PERCENTAGE = 20;
 const MEDIUM_WIN_PERCENTAGE = 30;
 const SMALL_WIN_PERCENTAGE = 50;
+const NUMBER_OF_DIFFERENT_WINS = 3;
 
+
+const HOUSE_EDGE = 0.05; 
+
+const HOUSE_ODDS_2_DECIMALS = Math.round(calculateHouseOdds() * 100) / 100;
+
+const SMALL_WIN_OFFER = calculateSpecificWinOffer(SMALL_WIN_PERCENTAGE);
+const MEDIUM_WIN_OFFER = calculateSpecificWinOffer(MEDIUM_WIN_PERCENTAGE);
+const BIG_WIN_OFFER = calculateSpecificWinOffer(BIG_WIN_PERCENTAGE);
+
+
+/* House offer for specific win, i.e. SMALL WIN, MEDIUM WIN, BIG WIN. */
+function calculateSpecificWinOffer(specificWinPercentage){
+	const hundredWins = 100 * calculateHouseOdds();
+	return hundredWins / (NUMBER_OF_DIFFERENT_WINS * specificWinPercentage);
+}
+
+
+function calculateHouseOdds(){
+	const realWinPossibility = calculateRealWinPossibility();
+	const playerReturn = 1.0 - HOUSE_EDGE;
+	return 1.0 / (realWinPossibility * playerReturn);
+}
+
+
+
+/* Returns win possibility when the fact that win is guaranteed after 3 consecutive losses is accounted for. */
+function calculateRealWinPossibility(){
+	const PERCENTAGE_CONVERTER_FACTOR = 100.0;
+	const x = WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
+	
+	const numberOfPossibilities = 1.0/x + 1.0/(x*x) + 1.0/(x*x*x) + 1.0/(x*x*x*x);
+	const numberOfWins = numberOfPossibilities * x;
+	
+	const guaranteedWinsAfter3losses = (1-x)*(1-x)*(1-x)/(x*x*x);
+	const winsThatWouldHappenAnywayAfter3losses = guaranteedWinsAfter3losses * x;
+	const extraWinsAfter3losses = guaranteedWinsAfter3losses - winsThatWouldHappenAnywayAfter3losses;
+	
+	const numberOfAllWins = numberOfWins + extraWinsAfter3losses;
+	const realWinPossibility = numberOfAllWins / numberOfPossibilities;
+	
+	return realWinPossibility;
+}
+
+/* Returns win percentage when the fact that win is guaranteed after 3 consecutive losses is accounted for. */
+function calculateRealWinPercentage(){
+	const realWinPossibility = calculateRealWinPossibility();
+	const PERCENTAGE_CONVERTER_FACTOR = 100.0;
+	return realWinPossibility * PERCENTAGE_CONVERTER_FACTOR;
+}
+
+
+/* Returns quotient when house edge is calculated. */
+function mapWinToHouseWinningQuotient(whichWin){
+	const fairQuotient = mapWhichWinToWinQuotient();
+	const playerReturn = 1.0 - HOUSE_EDGE;
+	return fairQuotient * playerReturn;
+}
+
+
+/* Returns fair quotient */
 function mapWhichWinToWinQuotient(whichWin){
 
 	const winTierPercentage = mapWhichWinToWinTierPercentage(whichWin);
-	const totalWinPercentage = WIN_PERCENTAGE * winTierPercentage;
+	const realWinPercentage = calculateRealWinPercentage();
+	const totalWinPercentage = realWinPercentage * winTierPercentage;
 	
 	const PERCENT_CONVERTER = 1.0/(100 * 100);
 	const winChance = totalWinPercentage * PERCENT_CONVERTER;
 	return 1.0 / winChance;
 }
 
+
+/* It receives whichWin, i.e. SMALL_WIN, MEDIUM_WIN, BIG_WIN and it returns the percentage that such win has occured 
+under the assumption that some win has indeed occured. */
 function mapWhichWinToWinTierPercentage(whichWin){
 	switch (whichWin){
 		case SMALL_WIN: return SMALL_WIN_PERCENTAGE;
@@ -65,14 +133,23 @@ function mapWhichWinToWinTierPercentage(whichWin){
 	}
 }
 
+
+/* It receives whichWin, i.e. SMALL_WIN, MEDIUM_WIN, BIG_WIN and it returns the quotient that the house offers for that win. */
+function mapWhichWinToHouseQuotient(whichWin){
+	const specificWinPercentage = mapWhichWinToWinTierPercentage(whichWin);
+	return calculateSpecificWinOffer(specificWinPercentage);
+}
+
+/* This code is called when a player wins. */
 function doWin(betWonCallback, betsSinceWin, setAllCards){
 	betsSinceWin.current = 0;
 	const whichWin = calculateWhichWin();
 	displayWin(whichWin, setAllCards);
-	const winQuotient = mapWhichWinToWinQuotient(whichWin);
+	const winQuotient = mapWhichWinToHouseQuotient(whichWin);
 	betWonCallback(winQuotient);
 }
 
+/* Randomly decides whether a player got a SMALL_WIN, MEDIUM_WIN, or a BIG_WIN. */
 function calculateWhichWin(){
 	const randomNumber = Math.random() * 100;
 	if (randomNumber < BIG_WIN_PERCENTAGE){
@@ -84,7 +161,7 @@ function calculateWhichWin(){
 	return SMALL_WIN;
 }
 
-
+/* Randomly decides whether a player won this round. */
 function clientHasWon(){
 	const randomNumber = Math.random() * 100;
 	if (randomNumber < WIN_PERCENTAGE){
@@ -92,6 +169,7 @@ function clientHasWon(){
 	} 
 	return false;
 }
+
 
 function chooseRandomPosition(){
 	let randomRow = Math.floor(Math.random() * NUMBER_OF_ROWS);
@@ -110,6 +188,7 @@ function randomlyChooseACard(){
 	return allPictures[randomIndex];
 }
 
+/* Shows cards in a winning pattern on the screen. */
 function displayWin(whichWin, setAllCards){
 	const winningCard = chooseWinningCard(whichWin);
 	const [row, column] = chooseRandomPosition();
@@ -118,6 +197,10 @@ function displayWin(whichWin, setAllCards){
 	setAllCards(newCards);
 }
 
+/* Returns an object with a field 'rows' that is a 2D array which contains a winning pattern of cards. 
+Other functions may use this 2D array to display the cards on the screen. 
+This function is given the information what the winning card should be and where the winning card should be. 
+rowColumn.column stands for the column where the most left winning card is.  */
 function calculateNewCards(winningCard, rowColumn){
 	let newCards = {rows: []};
 	
@@ -134,6 +217,7 @@ function calculateNewCards(winningCard, rowColumn){
 	return newCards;
 }
 
+/* Returns a row where there is no winning combination of cards. */
 function getLosingRow(){
 	let losingRow = [];
 	
@@ -159,6 +243,7 @@ function getRandomElement(array){
 	return array[randomIndex];
 }
 
+
 function displayLoss(setAllCards){
 	const cards = getLosingCards();
 	setAllCards(cards);
@@ -173,6 +258,7 @@ function getLosingCards(){
 	return cards;
 }
 
+/* Returns a row with a winning pattern of cards. Arguments are the winning card and the column of the most left winning card.*/
 function getWinningRow(winningCard, column){
 	let winningRow = [];
 	
@@ -285,6 +371,13 @@ function GameView(props){
 					className={imageInfo.winCard? "winCard onePicture" : 'onePicture'}/> </div>})} 
 				</div>
 			})}
+		</div>
+		
+		<div className="houseOdds">
+			<label> KVOTA DA SU SVE POBEDE ISTE: x{HOUSE_ODDS_2_DECIMALS} </label>
+			<label> KVOTA ZA MALU POBEDU x{round2decimals(SMALL_WIN_OFFER)}</label>
+			<label> KVOTA ZA SREDNJU POBEDU x{round2decimals(MEDIUM_WIN_OFFER)}</label>
+			<label> KVOTA ZA VELIKU POBEDU x{round2decimals(BIG_WIN_OFFER)}</label>
 		</div>
 		
 		<div className="button">

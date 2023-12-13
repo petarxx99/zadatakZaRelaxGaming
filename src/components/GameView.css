@@ -25,3 +25,8 @@
 .dontShow{
 	display: none;
 }
+
+.houseOdds{
+	display: flex;
+	flex-direction: column;
+}
