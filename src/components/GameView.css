@@ -12,10 +12,14 @@
 	justify-content: center;
 }
 
+.onePicture{
+	padding: 1vw;
+}
+
 .winCard{
 	border-width:10vw;
-	border-color: red;
-	background: red;
+	border-color: yellow;
+	background: yellow;
 }
 
 .dontShow{

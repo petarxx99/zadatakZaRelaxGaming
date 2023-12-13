@@ -281,8 +281,8 @@ function GameView(props){
 		
 		<div className="rowsWrap" >
 			{allCards?.rows.map(row => { return <div className="oneRow"> 
-				{row?.map(imageInfo => {return <div className={imageInfo.winCard? 'winCard' : ''} width="120px" height="120px"><img src={imageInfo.src} width="100px" height="100px" 
-					className={imageInfo.winCard? "winCard" : ''}/> </div>})} 
+				{row?.map(imageInfo => {return <div className={imageInfo.winCard? 'winCard' : ''}><img src={imageInfo.src} width="80vw" height="80vw" 
+					className={imageInfo.winCard? "winCard onePicture" : 'onePicture'}/> </div>})} 
 				</div>
 			})}
 		</div>
