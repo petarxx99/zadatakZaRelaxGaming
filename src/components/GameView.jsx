@@ -225,19 +225,28 @@ function displayNoCards(xPicture, setAllCards){
 
 function GameView(props){
 
+	function betWonCallback(winQuotient){
+		setBetIsHappening(false);
+		props.betWonCallback(winQuotient);
+	}
+
 	function startBet(){
+		props.betStartedCallback();
+		setBetIsHappening(true);
 		displayNoCards(xPicture, setAllCards);
 		
 		setTimeout(() => {
 			if (betsSinceWin.current > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
-				doWin(props.betWonCallback, betsSinceWin, setAllCards);	
+				doWin(betWonCallback, betsSinceWin, setAllCards);	
 			} else {
 				const clientWon = clientHasWon();
 				if (clientWon){
-					doWin(props.betWonCallback, betsSinceWin, setAllCards);
+					doWin(betWonCallback, betsSinceWin, setAllCards);
 				} else {
 					betsSinceWin.current += 1;
 					displayLoss(setAllCards);
+					
+					setBetIsHappening(false);
 					props.betLostCallback();
 				}
 			}
@@ -257,9 +266,9 @@ function GameView(props){
 	const xPicture = '/xPicture.png';
 	
 	
-		   
-	
 	const [allCards, setAllCards] = useState(null);
+	
+	const [betIsHappening, setBetIsHappening] = useState(false);
 	
 	useEffect(() => {
 		displayNoCards(xPicture, setAllCards);	
@@ -279,7 +288,7 @@ function GameView(props){
 		</div>
 		
 		<div className="button">
-			<button onClick={startBet}> IGRAJ </button>
+			<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> IGRAJ </button>
 		</div>
 	</div>
 	);

@@ -2,7 +2,7 @@
 import {useRef, useEffect, useState } from 'react';
 
 import GameView from './GameView.jsx';
-import style from './MainView.css';
+import './MainView.css';
 
 
 
@@ -36,39 +36,41 @@ function MainView(){
 	function betLost(){
 		alert("Bet lost");
 		setCredit(credit - amountToBet);
+		setBetIsHappening(false);
 	}
 	
 	function betWon(winQuotient){
 		alert("Bet won: " + winQuotient);
 		const creditChange = amountToBet * winQuotient;
 		setCredit(credit + creditChange);
+		setBetIsHappening(false);
 	}
+	
+	const betStarted = () => setBetIsHappening(true);
 	
 	const [credit, setCredit] = useState(START_CREDIT);
 	const [amountToBet, setAmountToBet] = useState(1);
 	const [lastCreditChange, setLastCreditChange] = useState(0);
+	const [betIsHappening, setBetIsHappening] = useState(false);
 	
 
 	return (
-	<div className={style.wrap}>
-		<div className={style.up} >
-			<GameView betWonCallback={betWon} betLostCallback={betLost}/>	
+	<div className={'wrap'}>
+		<div className={'up'} >
+			<GameView betWonCallback={betWon} betLostCallback={betLost} betStartedCallback={betStarted}/>	
 		</div>
 		
-		<div className={style.down} >
-			<div className={style.credit}>
+		<div className={'down'} >
+			<div className={'credit'}>
 				<label> NOVAC {credit} </label>
 			</div>
 			
-			<div className={style.amountToBet} >
+			<div className={'amountToBet'} >
 				<input	type="number" onKeyPress={event => {validateInputNumber(event, parseInt(amountToBet), credit)}}
       					value={amountToBet} 
       					onChange={event => changeAmountToBet(parseInt(event.target.value || 1))} 	
+      					className={betIsHappening? 'dontShow' : ''}
     				/>
-			</div>
-			
-			<div className={style.betButton}>
-				<button onClick={startNextBet}> ODIGRAJ </button>
 			</div>
 		</div>
 	</div>
