@@ -75,19 +75,19 @@ function clientHasWon(){
 }
 
 function chooseRandomPosition(){
-	let randomRow = Math.round(Math.random() * NUMBER_OF_ROWS);
-	let randomColumn = Math.round(Math.random () * (NUMBER_OF_COLUMNS - NUMBER_OF_CARDS_TO_WIN + 1));
+	let randomRow = Math.floor(Math.random() * NUMBER_OF_ROWS);
+	let randomColumn = Math.floor(Math.random () * (NUMBER_OF_COLUMNS - NUMBER_OF_CARDS_TO_WIN + 1));
 	return [randomRow, randomColumn];
 }
 
 function chooseWinningCard(whichWin){
 	const picturesToChooseFrom = allPictures.filter(p => p.tier === whichWin);
-	const randomIndex = Math.round(Math.random() * picturesToChooseFrom.length);
+	const randomIndex = Math.floor(Math.random() * picturesToChooseFrom.length);
 	return picturesToChooseFrom[randomIndex];
 }
 
 function randomlyChooseACard(){
-	const randomIndex = Math.round(Math.random() * allPictures.length);
+	const randomIndex = Math.floor(Math.random() * allPictures.length);
 	return allPictures[randomIndex];
 }
 
@@ -136,7 +136,7 @@ function getLosingRow(){
 }
 
 function getRandomElement(array){
-	const randomIndex = Math.round(Math.random() * array.length);
+	const randomIndex = Math.floor(Math.random() * array.length);
 	return array[randomIndex];
 }
 
