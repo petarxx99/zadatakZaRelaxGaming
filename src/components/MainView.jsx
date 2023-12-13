@@ -4,13 +4,7 @@ import {useRef, useEffect, useState } from 'react';
 import GameView from './GameView.jsx';
 import style from './MainView.css';
 
-function betWon(whichWin){
-	alert("Bet won: " + whichWin);
-}
 
-function betLost(){
-	alert("Bet lost");
-}
 
 function MainView(){
 
@@ -37,6 +31,17 @@ function MainView(){
 		if (newAmountToBet >= 1 && newAmountToBet <= credit){
 			setAmountToBet(newAmountToBet);
 		}
+	}
+	
+	function betLost(){
+		alert("Bet lost");
+		setCredit(credit - amountToBet);
+	}
+	
+	function betWon(winQuotient){
+		alert("Bet won: " + winQuotient);
+		const creditChange = amountToBet * winQuotient;
+		setCredit(credit + creditChange);
 	}
 	
 	const [credit, setCredit] = useState(START_CREDIT);

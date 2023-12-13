@@ -47,11 +47,30 @@ const BIG_WIN_PERCENTAGE = 20;
 const MEDIUM_WIN_PERCENTAGE = 30;
 const SMALL_WIN_PERCENTAGE = 50;
 
+function mapWhichWinToWinQuotient(whichWin){
+
+	const winTierPercentage = mapWhichWinToWinTierPercentage(whichWin);
+	const totalWinPercentage = WIN_PERCENTAGE * winTierPercentage;
+	
+	const PERCENT_CONVERTER = 1.0/(100 * 100);
+	const winChance = totalWinPercentage * PERCENT_CONVERTER;
+	return 1.0 / winChance;
+}
+
+function mapWhichWinToWinTierPercentage(whichWin){
+	switch (whichWin){
+		case SMALL_WIN: return SMALL_WIN_PERCENTAGE;
+		case MEDIUM_WIN: return MEDIUM_WIN_PERCENTAGE;
+		case BIG_WIN: return BIG_WIN_PERCENTAGE;
+	}
+}
+
 function doWin(betWonCallback, betsSinceWin, setAllCards){
 	betsSinceWin.current = 0;
 	const whichWin = calculateWhichWin();
 	displayWin(whichWin, setAllCards);
-	betWonCallback(whichWin);
+	const winQuotient = mapWhichWinToWinQuotient(whichWin);
+	betWonCallback(winQuotient);
 }
 
 function calculateWhichWin(){
