@@ -324,7 +324,7 @@ function GameView(props){
 		
 		setTimeout(() => {
 			if (betsSinceWin.current > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
-				doWin(betWonCallback, betsSinceWin, setAllCards);	
+				doSmallWin(betWonCallback, betsSinceWin, setAllCards);	
 			} else {
 				const clientWon = clientHasWon();
 				if (clientWon){
