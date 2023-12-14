@@ -5,31 +5,6 @@ import {useRef, useEffect, useState } from 'react';
 import './GameView.css';
 
 
-function getPictureRectangle(containerRectangle, pictureRectangle, pictureToContainerRatio){
-	
-	let calculatedPictureRectangle = {
-		width: pictureRectangle.width,
-		height: pictureRectangle.height
-	};
-	
-	if (pictureRectangle.width > pictureRectangle.height){
-		const pictureWidth = containerRectangle.width * pictureToContainerRatio;
-		calculatedPictureRectangle.width = Math.round(pictureWidth);
-		
-		const ratioOfNewToOldEdge = pictureWidth / pictureRectangle.width;
-		 
-		calculatedPictureRectangle.height = Math.round(ratioOfNewToOldEdge * pictureRectangle.height);
-	} else {
-		const pictureHeight = containerRectangle.height * pictureToContainerRatio;
-		calculatedPictureRectangle.height = Math.round(pictureHeight);
-		
-		const ratioOfNewToOldEdge = pictureHeight / pictureRectangle.height;
-		
-		calculatedPictureRectangle.width = Math.round(ratioOfNewToOldEdge * pictureRectangle.width);
-	}
-	
-	return calculatedPictureRectangle;
-}
 
 function round2decimals(number){
 	return Math.round(number * 100.0) / 100.0;
@@ -134,19 +109,12 @@ House edge is NOT calculated into the odds. Quotient is fair, which means that i
 player should win in the long run. */
 function getSpecificWinQuotient(whichWin){
 	const winData = calculateFairQuotients();
-//	const howMuchEachWinTierContributes = 100.0 / NUMBER_OF_DIFFERENT_WINS;
 
 	switch(whichWin){
 		case SMALL_WIN: return winData.smallWinQuotient;
 		case MEDIUM_WIN: return winData.mediumWinQuotient;
 		case BIG_WIN: return winData.bigWinQuotient;
 	}
-	/*
-	switch(whichWin){
-		case SMALL_WIN: return howMuchEachWinTierContributes / (winData.percentageOfSmallWins * winData.realWinPossibility);
-		case MEDIUM_WIN: return howMuchEachWinTierContributes / (winData.percentageOfMediumWins * winData.realWinPossibility);
-		case BIG_WIN: return howMuchEachWinTierContributes / (winData.percentageOfBigWins * winData.realWinPossibility);
-	}*/
 }
 
 
@@ -380,15 +348,6 @@ function GameView(props){
 	}
 	
 	const betsLostSinceWin = useRef(0);
-	
-	
-	const containerRectangle = {width: 50, height: 50};
-	const pictureToContainerRatio = 0.8;
-	const pictureRectangleRatio = {width: 1, height: 1};
-	const pictureRectangle = getPictureRectangle(containerRectangle, pictureRectangleRatio, pictureToContainerRatio);
-	
-		
-	
 	const xPicture = '/xPicture.png';
 	
 	
