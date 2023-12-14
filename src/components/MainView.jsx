@@ -73,6 +73,7 @@ function MainView(){
 	const betStarted = () => {
 		creditTemporary.current = credit - amountToBet;
 		setCredit(credit - amountToBet);
+		setLastCreditChange(-amountToBet);
 		setBetIsHappening(true);
 	}
 	

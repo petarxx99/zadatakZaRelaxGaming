@@ -66,37 +66,7 @@ const {realWinningChance, realWinningChanceError} = calculateRealWinChance(WIN_P
 
 /* This function calculates the possibility that some win will occur, calculates fair quotient.
 It also calculates the percentage of small, medium and big wins among all wins that occur. */
-function calculateWinPossibilities(){
-	const PERCENTAGE_CONVERTER_FACTOR = 100.0;
-	const x = WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
-	
-	const numberOfPossibilities = 1.0/x + 1.0/(x*x) + 1.0/(x*x*x) + 1.0/(x*x*x*x);
-	const numberOfWins = numberOfPossibilities * x;
-	
-	const guaranteedWinsAfter3losses = (1-x)*(1-x)*(1-x)/(x*x*x);
-	const winsThatWouldHappenAnywayAfter3losses = guaranteedWinsAfter3losses * x;
-	const extraWinsAfter3losses = guaranteedWinsAfter3losses - winsThatWouldHappenAnywayAfter3losses;
-	
-	const numberOfAllWins = numberOfWins + extraWinsAfter3losses;
-	
-	const numberOfNonGiftedWins = numberOfWins - winsThatWouldHappenAnywayAfter3losses;
-	
-	const numberOfSmallWins = numberOfNonGiftedWins * SMALL_WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR + guaranteedWinsAfter3losses;
-	const numberOfMediumWins = numberOfNonGiftedWins * MEDIUM_WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
-	const numberOfBigWins = numberOfNonGiftedWins * BIG_WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
-	
-	const returnObject = {
-		percentageOfSmallWins: PERCENTAGE_CONVERTER_FACTOR * numberOfSmallWins / numberOfAllWins,
-		percentageOfMediumWins: PERCENTAGE_CONVERTER_FACTOR * numberOfMediumWins / numberOfAllWins,
-		percentageOfBigWins: PERCENTAGE_CONVERTER_FACTOR * numberOfBigWins / numberOfAllWins,
-		realWinPossibility: numberOfAllWins / numberOfPossibilities,
-		realWinQuotient: numberOfPossibilities / numberOfAllWins,
-		realWinPercentage: PERCENTAGE_CONVERTER_FACTOR * numberOfAllWins / numberOfPossibilities
-	};
-	return returnObject;
-}
-
-function calculateWinningPossibilities(){
+function calculateFairQuotients(){
 	const realWinningChance = calculateRealWinChance(WIN_PERCENTAGE / 100.0).realWinningChance;
 	const giftedWin = Math.pow(1-realWinningChance, 3);
 	const winNotGifted = 1 - giftedWin;
@@ -120,7 +90,20 @@ function calculateWinningPossibilities(){
 }
 
 
-
+/* This function receives the winning chance on the first try and it returns the winning chance that you get 
+when you play the game over and over again, under the assumption that after x number of consecutive losses you are guaranteed a win. 
+Let p be chance of a win in the limit when a player plays over and over again. 
+Let the basicWinChance be the chance that a player wins a round that is not fixed. 
+Then, when a player plays there are only 2 ways a player can win, either he has lost the last x consecutive games and he will be gifted 
+a win (the chance for that is Math.pow(1 - p, x)), or he did not lose x consecutive games and he got lucky to win this time
+(chance for that is (1 - Math.pow(1-p, x) * basicWinChance)). When we add the chance of these two scenarios together we get 
+the chance that a player wins a round (p). So, we get 
+Math.pow(1-p, x) + (1 - Math.pow(1-p, x)) * basicWinChance = p
+Math.pow(1-p, x) + basicWinChance - basicWinChance * Math.pow(1-p, x) = p
+Math.pow(1-p, x) * (1 - basicWinChance) + basicWinChance - p = 0.
+Instead of analytically solving this equation for the general case, I plugged in various probabilities for p (from 0 to 1) and 
+chose the one which will yield the left hand side of the equation the closest to 0.
+*/
 function calculateRealWinChance(basicWinChance){
 	const basicWinQuotient = 1.0 / basicWinChance;
 	let [smallestDifference, minP] = [1, 0];
@@ -145,11 +128,12 @@ function calculateRealWinChance(basicWinChance){
 }
 
 
+
 /* Returns a quotient for the specific win that is passed as an argument as SMALL_WIN, MEDIUM_WIN or BIG_WIN. 
 House edge is NOT calculated into the odds. Quotient is fair, which means that if a player keeps playing neither house nor 
 player should win in the long run. */
 function getSpecificWinQuotient(whichWin){
-	const winData = calculateWinningPossibilities();
+	const winData = calculateFairQuotients();
 //	const howMuchEachWinTierContributes = 100.0 / NUMBER_OF_DIFFERENT_WINS;
 
 	switch(whichWin){
