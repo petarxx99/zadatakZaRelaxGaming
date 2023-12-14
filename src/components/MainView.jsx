@@ -56,7 +56,10 @@ function MainView(){
 		soundSuccess.play();
 	}
 	
-	const betStarted = () => setBetIsHappening(true);
+	const betStarted = () => {
+		setCredit(credit - amountToBet);
+		setBetIsHappening(true);
+	}
 	
 	const [credit, setCredit] = useState(START_CREDIT);
 	const [amountToBet, setAmountToBet] = useState(1);

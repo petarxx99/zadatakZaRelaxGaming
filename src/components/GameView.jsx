@@ -54,30 +54,18 @@ const NUMBER_OF_DIFFERENT_WINS = 3;
 
 const HOUSE_EDGE = 0.05; 
 
-const HOUSE_ODDS_2_DECIMALS = Math.round(calculateHouseOdds() * 100) / 100;
-
-const SMALL_WIN_OFFER = calculateSpecificWinOffer(SMALL_WIN_PERCENTAGE);
-const MEDIUM_WIN_OFFER = calculateSpecificWinOffer(MEDIUM_WIN_PERCENTAGE);
-const BIG_WIN_OFFER = calculateSpecificWinOffer(BIG_WIN_PERCENTAGE);
 
 
-/* House offer for specific win, i.e. SMALL WIN, MEDIUM WIN, BIG WIN. */
-function calculateSpecificWinOffer(specificWinPercentage){
-	const hundredWins = 100 * calculateHouseOdds();
-	return hundredWins / (NUMBER_OF_DIFFERENT_WINS * specificWinPercentage);
-}
-
-
-function calculateHouseOdds(){
-	const realWinPossibility = calculateRealWinPossibility();
-	const playerReturn = 1.0 - HOUSE_EDGE;
-	return 1.0 / (realWinPossibility * playerReturn);
-}
+const SMALL_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(SMALL_WIN_PERCENTAGE);
+const MEDIUM_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(MEDIUM_WIN_PERCENTAGE);
+const BIG_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(BIG_WIN_PERCENTAGE);
 
 
 
-/* Returns win possibility when the fact that win is guaranteed after 3 consecutive losses is accounted for. */
-function calculateRealWinPossibility(){
+
+/* This function calculates the possibility that some win will occur, calculates fair quotient.
+It also calculates the percentage of small, medium and big wins among all wins that occur. */
+function calculateWinPossibilities(){
 	const PERCENTAGE_CONVERTER_FACTOR = 100.0;
 	const x = WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
 	
@@ -89,38 +77,48 @@ function calculateRealWinPossibility(){
 	const extraWinsAfter3losses = guaranteedWinsAfter3losses - winsThatWouldHappenAnywayAfter3losses;
 	
 	const numberOfAllWins = numberOfWins + extraWinsAfter3losses;
-	const realWinPossibility = numberOfAllWins / numberOfPossibilities;
 	
-	return realWinPossibility;
+	const numberOfNonGiftedWins = numberOfWins - winsThatWouldHappenAnywayAfter3losses;
+	
+	const numberOfSmallWins = numberOfNonGiftedWins * SMALL_WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR + guaranteedWinsAfter3losses;
+	const numberOfMediumWins = numberOfNonGiftedWins * MEDIUM_WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
+	const numberOfBigWins = numberOfNonGiftedWins * BIG_WIN_PERCENTAGE / PERCENTAGE_CONVERTER_FACTOR;
+	
+	const returnObject = {
+		percentageOfSmallWins: PERCENTAGE_CONVERTER_FACTOR * numberOfSmallWins / numberOfAllWins,
+		percentageOfMediumWins: PERCENTAGE_CONVERTER_FACTOR * numberOfMediumWins / numberOfAllWins,
+		percentageOfBigWins: PERCENTAGE_CONVERTER_FACTOR * numberOfBigWins / numberOfAllWins,
+		realWinPossibility: numberOfAllWins / numberOfPossibilities,
+		realWinQuotient: numberOfPossibilities / numberOfAllWins
+	};
+	return returnObject;
 }
 
-/* Returns win percentage when the fact that win is guaranteed after 3 consecutive losses is accounted for. */
-function calculateRealWinPercentage(){
-	const realWinPossibility = calculateRealWinPossibility();
-	const PERCENTAGE_CONVERTER_FACTOR = 100.0;
-	return realWinPossibility * PERCENTAGE_CONVERTER_FACTOR;
+
+/* Returns a quotient for the specific win that is passed as an argument as SMALL_WIN, MEDIUM_WIN or BIG_WIN. 
+House edge is NOT calculated into the odds. Quotient is fair, which means that if a player keeps playing neither house nor 
+player should win in the long run. */
+function getSpecificWinQuotient(whichWin){
+	const winData = calculateWinPossibilities();
+	const hundredWins = 100.0 * winData.realWinQuotient;
+	const howMuchEachWinTierContributes = hundredWins / NUMBER_OF_DIFFERENT_WINS;
+	
+	switch(whichWin){
+		case SMALL_WIN: return howMuchEachWinTierContributes / winData.percentageOfSmallWins;
+		case MEDIUM_WIN: return howMuchEachWinTierContributes / winData.percentageOfMediumWins;
+		case BIG_WIN: return howMuchEachWinTierContributes / winData.percentageOfBigWins;
+	}
 }
 
 
-/* Returns quotient when house edge is calculated. */
-function mapWinToHouseWinningQuotient(whichWin){
-	const fairQuotient = mapWhichWinToWinQuotient();
+/* Returns a quotient for the specific win that is passed as an argument as SMALL_WIN, MEDIUM_WIN or BIG_WIN. 
+House edge is calculated into the odds. Quotient is not fair, which means that if a player keeps playing house wins in the long run. */
+function getSpecificWinQuotientWithHouseEdge(whichWin){
+	const fairQuotient = getSpecificWinQuotient(whichWin);
 	const playerReturn = 1.0 - HOUSE_EDGE;
 	return fairQuotient * playerReturn;
 }
 
-
-/* Returns fair quotient */
-function mapWhichWinToWinQuotient(whichWin){
-
-	const winTierPercentage = mapWhichWinToWinTierPercentage(whichWin);
-	const realWinPercentage = calculateRealWinPercentage();
-	const totalWinPercentage = realWinPercentage * winTierPercentage;
-	
-	const PERCENT_CONVERTER = 1.0/(100 * 100);
-	const winChance = totalWinPercentage * PERCENT_CONVERTER;
-	return 1.0 / winChance;
-}
 
 
 /* It receives whichWin, i.e. SMALL_WIN, MEDIUM_WIN, BIG_WIN and it returns the percentage that such win has occured 
@@ -134,18 +132,21 @@ function mapWhichWinToWinTierPercentage(whichWin){
 }
 
 
-/* It receives whichWin, i.e. SMALL_WIN, MEDIUM_WIN, BIG_WIN and it returns the quotient that the house offers for that win. */
-function mapWhichWinToHouseQuotient(whichWin){
-	const specificWinPercentage = mapWhichWinToWinTierPercentage(whichWin);
-	return calculateSpecificWinOffer(specificWinPercentage);
-}
-
 /* This code is called when a player wins. */
 function doWin(betWonCallback, betsSinceWin, setAllCards){
-	betsSinceWin.current = 0;
+	betsSinceWin.value = 0;
 	const whichWin = calculateWhichWin();
 	displayWin(whichWin, setAllCards);
-	const winQuotient = mapWhichWinToHouseQuotient(whichWin);
+	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
+	betWonCallback(winQuotient);
+}
+
+/* This code is called when you want to give player the smallest win. */
+function doSmallWin(betWonCallback, betsSinceWin, setAllCards){
+	betsSinceWin.value = 0;
+	const whichWin = SMALL_WIN;
+	displayWin(whichWin, setAllCards);
+	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
 	betWonCallback(winQuotient);
 }
 
@@ -322,14 +323,14 @@ function GameView(props){
 		displayNoCards(xPicture, setAllCards);
 		
 		setTimeout(() => {
-			if (betsSinceWin.current > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
+			if (betsSinceWin.value > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
 				doWin(betWonCallback, betsSinceWin, setAllCards);	
 			} else {
 				const clientWon = clientHasWon();
 				if (clientWon){
 					doWin(betWonCallback, betsSinceWin, setAllCards);
 				} else {
-					betsSinceWin.current += 1;
+					betsSinceWin.value += 1;
 					displayLoss(setAllCards);
 					
 					setBetIsHappening(false);
