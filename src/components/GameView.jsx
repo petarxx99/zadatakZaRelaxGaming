@@ -60,6 +60,7 @@ const SMALL_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(SMALL_WIN);
 const MEDIUM_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(MEDIUM_WIN);
 const BIG_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(BIG_WIN);
 
+const {realWinningChance, realWinningChanceError} = calculateRealWinChance(WIN_PERCENTAGE / 100.0);
 
 
 
@@ -95,19 +96,73 @@ function calculateWinPossibilities(){
 	return returnObject;
 }
 
+function calculateWinningPossibilities(){
+	const realWinningChance = calculateRealWinChance(WIN_PERCENTAGE / 100.0).realWinningChance;
+	const giftedWin = Math.pow(1-realWinningChance, 3);
+	const winNotGifted = 1 - giftedWin;
+	
+	const chanceOfSmallWin = giftedWin + winNotGifted * WIN_PERCENTAGE * SMALL_WIN_PERCENTAGE / (100.0 * 100.0);
+	const chanceOfMediumWin = winNotGifted * WIN_PERCENTAGE * MEDIUM_WIN_PERCENTAGE / (100.0 * 100.0);
+	const chanceOfBigWin = winNotGifted * WIN_PERCENTAGE * BIG_WIN_PERCENTAGE / (100.0 * 100.0);
+	
+	const howMuchEachTierContributes = 1.0 / NUMBER_OF_DIFFERENT_WINS;
+	
+	const smallWinQuotient = howMuchEachTierContributes / chanceOfSmallWin;
+	const mediumWinQuotient = howMuchEachTierContributes / chanceOfMediumWin;
+	const bigWinQuotient = howMuchEachTierContributes / chanceOfBigWin;
+	
+	return {
+		smallWinQuotient,
+		mediumWinQuotient,
+		bigWinQuotient,
+		winQuotient: 1.0 / realWinningChance
+	};
+}
+
+
+
+function calculateRealWinChance(basicWinChance){
+	const basicWinQuotient = 1.0 / basicWinChance;
+	let [smallestDifference, minP] = [1, 0];
+	
+	const NUMBER_OF_TRIES = 1024;
+	const deltaP = 1.0 / NUMBER_OF_TRIES;
+	
+	for(let i=0; i < NUMBER_OF_TRIES; i++){
+		const p = deltaP * i;
+		
+		const difference = Math.abs(Math.pow(1 - p, basicWinQuotient) * (1 - basicWinChance) + basicWinChance - p);
+		if (difference < smallestDifference){
+			smallestDifference = difference;
+			minP = p;
+		}
+	}
+	
+	return {
+		realWinningChance: minP,
+		difference: smallestDifference
+	};
+}
+
 
 /* Returns a quotient for the specific win that is passed as an argument as SMALL_WIN, MEDIUM_WIN or BIG_WIN. 
 House edge is NOT calculated into the odds. Quotient is fair, which means that if a player keeps playing neither house nor 
 player should win in the long run. */
 function getSpecificWinQuotient(whichWin){
-	const winData = calculateWinPossibilities();
-	const howMuchEachWinTierContributes = 100.0 / NUMBER_OF_DIFFERENT_WINS;
-	
+	const winData = calculateWinningPossibilities();
+//	const howMuchEachWinTierContributes = 100.0 / NUMBER_OF_DIFFERENT_WINS;
+
+	switch(whichWin){
+		case SMALL_WIN: return winData.smallWinQuotient;
+		case MEDIUM_WIN: return winData.mediumWinQuotient;
+		case BIG_WIN: return winData.bigWinQuotient;
+	}
+	/*
 	switch(whichWin){
 		case SMALL_WIN: return howMuchEachWinTierContributes / (winData.percentageOfSmallWins * winData.realWinPossibility);
 		case MEDIUM_WIN: return howMuchEachWinTierContributes / (winData.percentageOfMediumWins * winData.realWinPossibility);
 		case BIG_WIN: return howMuchEachWinTierContributes / (winData.percentageOfBigWins * winData.realWinPossibility);
-	}
+	}*/
 }
 
 
