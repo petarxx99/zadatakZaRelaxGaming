@@ -363,27 +363,23 @@ function GameView(props){
 
 	
 	return (
-	<div className="wrap">
-		
-		<div className="rowsWrap" >
-			{allCards?.rows.map(row => { return <div className="oneRow"> 
-				{row?.map(imageInfo => {return <div className={imageInfo.winCard? 'winCard' : ''}><img src={imageInfo.src} width="80vw" height="80vw" 
-					className={imageInfo.winCard? "winCard onePicture" : 'onePicture'}/> </div>})} 
+<div className="wrap">
+	
+
+	<div className="rowsWrap" >
+			{allCards?.rows.map((row, iRow) => { return <div className="oneRow" key={iRow}> 
+				{row?.map((imageInfo, jColumn) => {return <div className={imageInfo.winCard? 'winCard' : ''} key={jColumn}>
+				<img src={imageInfo.src} width="60vw" height="60vw"  className={imageInfo.winCard? "winCard onePicture" : 'onePicture'}/> </div>})} 
 				</div>
 			})}
-		</div>
-		
-		<div className="houseOdds">
-			<label> KVOTA DA SU SVE POBEDE ISTE: x{HOUSE_ODDS_2_DECIMALS} </label>
-			<label> KVOTA ZA MALU POBEDU x{round2decimals(SMALL_WIN_OFFER)}</label>
-			<label> KVOTA ZA SREDNJU POBEDU x{round2decimals(MEDIUM_WIN_OFFER)}</label>
-			<label> KVOTA ZA VELIKU POBEDU x{round2decimals(BIG_WIN_OFFER)}</label>
-		</div>
-		
-		<div className="button">
-			<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> IGRAJ </button>
-		</div>
 	</div>
+
+		
+		
+	<div className="buttonStartBet">
+		<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> ODIGRAJTE </button>
+	</div>
+</div>
 	);
 	
 

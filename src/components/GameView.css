@@ -26,7 +26,14 @@
 	display: none;
 }
 
-.houseOdds{
-	display: flex;
-	flex-direction: column;
+
+
+.houseOdds > label{
+	color: black;
+	font-weight: thick;
+	background: white;
 }
+
+
+
+

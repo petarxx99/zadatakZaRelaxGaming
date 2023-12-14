@@ -1,3 +1,42 @@
 .dontShow{
 	display: none;
 }
+
+.down{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+
+
+
+.noPhoneComponentsWrap{
+	background: gold;
+	max-width: 80vw;
+	position: relative;
+	left: 10vw;
+}
+
+
+.phoneComponentsWrap{
+	background: gold;
+	max-width: 95vw;
+	position: relative;
+	left: 2vw;
+}
+
+
+.backgroundPhoto{
+	position: absolute;
+	z-index: -1;
+	top: 0px;
+	left: 0px;
+	width: 100vw;
+	height: 100vw;
+}
+
+.backgroundPhotoOnPhone{
+	opacity: 0.7;
+}
+
