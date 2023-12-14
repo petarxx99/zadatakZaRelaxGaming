@@ -31,24 +31,28 @@ function MainView(){
 	        const newDigit = parseInt(event.key);
 	        const newAmountToBet = amountToBet * 10 + newDigit;
 	        	        
-	        if (newAmountToBet > credit || newAmountToBet < 1){
+	        if (newAmountToBet > credit || newAmountToBet < 0){
 	        	event.preventDefault();
 	        }
 	}
 	
 	function changeAmountToBet(newAmountToBet){
-		if (newAmountToBet >= 1 && newAmountToBet <= credit){
+		if (newAmountToBet <= credit && newAmountToBet >=0){
 			setAmountToBet(newAmountToBet);
 		}
 	}
 	
 	function betLost(){
+		if (creditTemporary.current < 1){
+			alert("Izgubili ste sav novac.");
+		}
 		setBetIsHappening(false);
 	}
 	
 	function betWon(winQuotient){
 		const creditChange = amountToBet * winQuotient;
-		setCredit(creditTemporary.current + creditChange);
+		const newCredit = creditTemporary.current + creditChange;
+		setCredit(newCredit);
 		setBetIsHappening(false);
 		soundSuccess.play();
 		setTimeout(() => {
@@ -87,11 +91,15 @@ function MainView(){
 		<img src="/basketballArena.jpg" className={backgroundPhotoClass} />
 		<div className={wrapClass}>
 			
-			<div className={'up'} >
+			<div className={(amountToBet > 0 && amountToBet <= credit)? 'up' : 'dontShow'} >
 				<GameView betWonCallback={betWon} betLostCallback={betLost} betStartedCallback={betStarted} 
 				className={showingWinPicture? 'dontShow' : ''}/>
 				<img src="/win.jpg" className={showingWinPicture? 'winPicture' : 'dontShow'} />	
 			</div>
+			<div className={(amountToBet > 0 && amountToBet <= credit)? 'dontShow' : 'up'} >
+				<label> <b>Niste uložili novac.</b> </label>	
+			</div>
+			
 		
 			<div className={'down'} >
 				<div className={'credit'}>
