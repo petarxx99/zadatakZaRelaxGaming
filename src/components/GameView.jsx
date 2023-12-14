@@ -365,7 +365,6 @@ function GameView(props){
 	
 	return (
 <div className="wrap">
-	{SMALL_WIN_OFFER}<br/>{MEDIUM_WIN_OFFER}<br/>{BIG_WIN_OFFER}<br/>
 
 	<div className="rowsWrap" >
 			{allCards?.rows.map((row, iRow) => { return <div className="oneRow" key={iRow}> 
