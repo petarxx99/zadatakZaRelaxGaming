@@ -43,18 +43,26 @@ function MainView(){
 	}
 	
 	function betLost(){
-		alert("Bet lost");
 		setCredit(credit - amountToBet);
 		setBetIsHappening(false);
 	}
 	
 	function betWon(winQuotient){
-		alert("Bet won: " + winQuotient);
 		const creditChange = amountToBet * winQuotient;
 		setCredit(credit + creditChange);
 		setBetIsHappening(false);
 		soundSuccess.play();
+		setTimeout(() => {
+			setShowingWinPicture(true);
+			
+			setTimeout(() => {
+				setShowingWinPicture(false);
+			}, ONE_AND_A_HALF_SECONDS);
+		}, ONE_AND_A_HALF_SECONDS);
 	}
+	const TWO_SECONDS = 2000;
+	const ONE_SECOND = 1000;
+	const ONE_AND_A_HALF_SECONDS = 1500;
 	
 	const betStarted = () => {
 		setCredit(credit - amountToBet);
@@ -65,6 +73,7 @@ function MainView(){
 	const [amountToBet, setAmountToBet] = useState(1);
 	const [lastCreditChange, setLastCreditChange] = useState(0);
 	const [betIsHappening, setBetIsHappening] = useState(false);
+	const [showingWinPicture, setShowingWinPicture] = useState(false);
 	
 	const soundSuccess = new Audio("/soundSuccess.wav");
 	const soundFailure = new Audio("/soundFailure.wav");
@@ -77,7 +86,9 @@ function MainView(){
 		<div className={wrapClass}>
 			
 			<div className={'up'} >
-				<GameView betWonCallback={betWon} betLostCallback={betLost} betStartedCallback={betStarted}/>	
+				<GameView betWonCallback={betWon} betLostCallback={betLost} betStartedCallback={betStarted} 
+				className={showingWinPicture? 'dontShow' : ''}/>
+				<img src="/win.jpg" className={showingWinPicture? 'winPicture' : 'dontShow'} />	
 			</div>
 		
 			<div className={'down'} >

@@ -134,7 +134,7 @@ function mapWhichWinToWinTierPercentage(whichWin){
 
 /* This code is called when a player wins. */
 function doWin(betWonCallback, betsSinceWin, setAllCards){
-	betsSinceWin.value = 0;
+	betsSinceWin.current = 0;
 	const whichWin = calculateWhichWin();
 	displayWin(whichWin, setAllCards);
 	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
@@ -143,7 +143,7 @@ function doWin(betWonCallback, betsSinceWin, setAllCards){
 
 /* This code is called when you want to give player the smallest win. */
 function doSmallWin(betWonCallback, betsSinceWin, setAllCards){
-	betsSinceWin.value = 0;
+	betsSinceWin.current = 0;
 	const whichWin = SMALL_WIN;
 	displayWin(whichWin, setAllCards);
 	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
@@ -323,14 +323,14 @@ function GameView(props){
 		displayNoCards(xPicture, setAllCards);
 		
 		setTimeout(() => {
-			if (betsSinceWin.value > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
+			if (betsSinceWin.current > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
 				doWin(betWonCallback, betsSinceWin, setAllCards);	
 			} else {
 				const clientWon = clientHasWon();
 				if (clientWon){
 					doWin(betWonCallback, betsSinceWin, setAllCards);
 				} else {
-					betsSinceWin.value += 1;
+					betsSinceWin.current += 1;
 					displayLoss(setAllCards);
 					
 					setBetIsHappening(false);
