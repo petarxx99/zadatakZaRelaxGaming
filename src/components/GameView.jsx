@@ -131,7 +131,7 @@ function calculateRealWinChance(basicWinChance){
 	for(let i=0; i < NUMBER_OF_TRIES; i++){
 		const p = deltaP * i;
 		
-		const difference = Math.abs(Math.pow(1 - p, basicWinQuotient) * (1 - basicWinChance) + basicWinChance - p);
+		const difference = Math.abs(Math.pow(1 - p, NUMBER_OF_MAX_CONSECUTIVE_LOSSES) * (1 - basicWinChance) + basicWinChance - p);
 		if (difference < smallestDifference){
 			smallestDifference = difference;
 			minP = p;
