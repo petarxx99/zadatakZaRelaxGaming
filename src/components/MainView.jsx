@@ -43,13 +43,12 @@ function MainView(){
 	}
 	
 	function betLost(){
-		setCredit(credit - amountToBet);
 		setBetIsHappening(false);
 	}
 	
 	function betWon(winQuotient){
 		const creditChange = amountToBet * winQuotient;
-		setCredit(credit + creditChange);
+		setCredit(creditTemporary.current + creditChange);
 		setBetIsHappening(false);
 		soundSuccess.play();
 		setTimeout(() => {
@@ -60,11 +59,13 @@ function MainView(){
 			}, ONE_AND_A_HALF_SECONDS);
 		}, ONE_AND_A_HALF_SECONDS);
 	}
+	
 	const TWO_SECONDS = 2000;
 	const ONE_SECOND = 1000;
 	const ONE_AND_A_HALF_SECONDS = 1500;
 	
 	const betStarted = () => {
+		creditTemporary.current = credit - amountToBet;
 		setCredit(credit - amountToBet);
 		setBetIsHappening(true);
 	}
@@ -72,8 +73,9 @@ function MainView(){
 	const [credit, setCredit] = useState(START_CREDIT);
 	const [amountToBet, setAmountToBet] = useState(1);
 	const [lastCreditChange, setLastCreditChange] = useState(0);
-	const [betIsHappening, setBetIsHappening] = useState(false);
 	const [showingWinPicture, setShowingWinPicture] = useState(false);
+	const [betIsHappening, setBetIsHappening] = useState(false);
+	const creditTemporary = useRef(START_CREDIT);
 	
 	const soundSuccess = new Audio("/soundSuccess.wav");
 	const soundFailure = new Audio("/soundFailure.wav");

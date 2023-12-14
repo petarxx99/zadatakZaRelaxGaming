@@ -56,9 +56,9 @@ const HOUSE_EDGE = 0.05;
 
 
 
-const SMALL_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(SMALL_WIN_PERCENTAGE);
-const MEDIUM_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(MEDIUM_WIN_PERCENTAGE);
-const BIG_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(BIG_WIN_PERCENTAGE);
+const SMALL_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(SMALL_WIN);
+const MEDIUM_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(MEDIUM_WIN);
+const BIG_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(BIG_WIN);
 
 
 
@@ -89,7 +89,8 @@ function calculateWinPossibilities(){
 		percentageOfMediumWins: PERCENTAGE_CONVERTER_FACTOR * numberOfMediumWins / numberOfAllWins,
 		percentageOfBigWins: PERCENTAGE_CONVERTER_FACTOR * numberOfBigWins / numberOfAllWins,
 		realWinPossibility: numberOfAllWins / numberOfPossibilities,
-		realWinQuotient: numberOfPossibilities / numberOfAllWins
+		realWinQuotient: numberOfPossibilities / numberOfAllWins,
+		realWinPercentage: PERCENTAGE_CONVERTER_FACTOR * numberOfAllWins / numberOfPossibilities
 	};
 	return returnObject;
 }
@@ -100,13 +101,12 @@ House edge is NOT calculated into the odds. Quotient is fair, which means that i
 player should win in the long run. */
 function getSpecificWinQuotient(whichWin){
 	const winData = calculateWinPossibilities();
-	const hundredWins = 100.0 * winData.realWinQuotient;
-	const howMuchEachWinTierContributes = hundredWins / NUMBER_OF_DIFFERENT_WINS;
+	const howMuchEachWinTierContributes = 100.0 / NUMBER_OF_DIFFERENT_WINS;
 	
 	switch(whichWin){
-		case SMALL_WIN: return howMuchEachWinTierContributes / winData.percentageOfSmallWins;
-		case MEDIUM_WIN: return howMuchEachWinTierContributes / winData.percentageOfMediumWins;
-		case BIG_WIN: return howMuchEachWinTierContributes / winData.percentageOfBigWins;
+		case SMALL_WIN: return howMuchEachWinTierContributes / (winData.percentageOfSmallWins * winData.realWinPossibility);
+		case MEDIUM_WIN: return howMuchEachWinTierContributes / (winData.percentageOfMediumWins * winData.realWinPossibility);
+		case BIG_WIN: return howMuchEachWinTierContributes / (winData.percentageOfBigWins * winData.realWinPossibility);
 	}
 }
 
@@ -133,8 +133,8 @@ function mapWhichWinToWinTierPercentage(whichWin){
 
 
 /* This code is called when a player wins. */
-function doWin(betWonCallback, betsSinceWin, setAllCards){
-	betsSinceWin.current = 0;
+function doWin(betWonCallback, betsLostSinceWin, setAllCards){
+	betsLostSinceWin.current = 0;
 	const whichWin = calculateWhichWin();
 	displayWin(whichWin, setAllCards);
 	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
@@ -142,8 +142,8 @@ function doWin(betWonCallback, betsSinceWin, setAllCards){
 }
 
 /* This code is called when you want to give player the smallest win. */
-function doSmallWin(betWonCallback, betsSinceWin, setAllCards){
-	betsSinceWin.current = 0;
+function doSmallWin(betWonCallback, betsLostSinceWin, setAllCards){
+	betsLostSinceWin.current = 0;
 	const whichWin = SMALL_WIN;
 	displayWin(whichWin, setAllCards);
 	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
@@ -323,14 +323,14 @@ function GameView(props){
 		displayNoCards(xPicture, setAllCards);
 		
 		setTimeout(() => {
-			if (betsSinceWin.current > NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
-				doSmallWin(betWonCallback, betsSinceWin, setAllCards);	
+			if (betsLostSinceWin.current >= NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
+				doSmallWin(betWonCallback, betsLostSinceWin, setAllCards);	
 			} else {
 				const clientWon = clientHasWon();
 				if (clientWon){
-					doWin(betWonCallback, betsSinceWin, setAllCards);
+					doWin(betWonCallback, betsLostSinceWin, setAllCards);
 				} else {
-					betsSinceWin.current += 1;
+					betsLostSinceWin.current += 1;
 					displayLoss(setAllCards);
 					
 					setBetIsHappening(false);
@@ -340,7 +340,7 @@ function GameView(props){
 		}, THREE_SECONDS);
 	}
 	
-	let betsSinceWin = useRef(0);
+	const betsLostSinceWin = useRef(0);
 	
 	
 	const containerRectangle = {width: 50, height: 50};
@@ -365,7 +365,7 @@ function GameView(props){
 	
 	return (
 <div className="wrap">
-	
+	{SMALL_WIN_OFFER}<br/>{MEDIUM_WIN_OFFER}<br/>{BIG_WIN_OFFER}<br/>
 
 	<div className="rowsWrap" >
 			{allCards?.rows.map((row, iRow) => { return <div className="oneRow" key={iRow}> 
