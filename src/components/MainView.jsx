@@ -53,8 +53,10 @@ function MainView(){
 		const creditChange = amountToBet * winQuotient;
 		const newCredit = creditTemporary.current + creditChange;
 		setCredit(newCredit);
-		setBetIsHappening(false);
+		setLastCreditChange(creditChange);
 		soundSuccess.play();
+		
+		setBetIsHappening(false);
 		setTimeout(() => {
 			setShowingWinPicture(true);
 			
@@ -104,6 +106,8 @@ function MainView(){
 			<div className={'down'} >
 				<div className={'credit'}>
 					<label> <b>NOVAC KOJI IMATE {round2decimals(credit)} </b></label>
+					<label className={lastCreditChange <= 0? 'dontShow' : ''}> 
+					DOBILI STE {round2decimals(lastCreditChange)}! </label>
 				</div>
 			
 				<div className={'amountToBet'} >
