@@ -20,22 +20,109 @@ Na primer, funkcija calculateRealWinChance iz fajla components/GameView.jsx na o
 (pod ,,nepoklonjenom rundom" mislim na sve runde gde korisniku nije poklonjena pobeda nakon što je izgubio prethodnih x puta zaredom) i 
 na osnovu toga koliko rundi korisnik mora zaredom da izgubi da bi mu bila poklonjena pobeda u narednoj rundi. 
 Matematika iza koda koji se nalazi u toj funkciji je sledeća: 
-	Neka je p verovatnoća da igrač dobija nasumično izabranu rundu u limesu kada broj odigranih rundi teži beskonačnosti. 
-	Neka je osnovnaŠansa verovatnoća da igrač dobija rundu koja mu nije poklonjena. 
-	Neka je x broj rundi koji igrač mora da izgubi zaredom da bi mu naredna runda bila poklonjena. 
-	Igrač onda ima 2 načina da pobedi, ili mu je pobeda u toj rundi poklonjena (šansa za to je Math.pow(1 - p, x)), 
-	ili mu pobeda u toj rundi nije poklonjena (šansa za to je 1 - Math.pow(1-p, x)), ali je igrač imao sreće te je dobio tu rundu. 
-	Šansa da se to desi je (1 - Math.pow(1 - p, x)) * osnovnaŠansa. 
-	Dakle, šansa da igrač dobije rundu (p) je Math.pow(1 - p, x)) + (1 - Math.pow(1 - p, x)) * osnovnaŠansa.
-	Math.pow(1 - p, x)) + (1 - Math.pow(1 - p, x)) * osnovnaŠansa = p
-	Math.pow(1 - p, x) + osnovnaŠansa - Math.pow(1 - p, x) * osnovnaŠansa = p 
-	Math.pow(1 - p, x) * (1 - osnovnaŠansa) + osnovnaŠansa - p = 0.
-	Leva strana jednačine je funkcija koja zavisi samo od p, sve ostale promenljive su zadate. 
-	Pronalazim za koju vrednost p je funkcija najbliže 0 i to je rešenje jednačine (jednačina nije rešena analitički, 
-	jer nisam siguran da je moguće analitički rešiti ovu jednačinu za opšti slučaj. Moguće je rešiti je za x = 3, ali sam ja svejedno 
-	ostavio ovo rešenje, jer je opštije, x ne mora biti 3 i kod će i dalje raditi). 
+
+a je verovatnoća da se je korisnik dobio prošlu partiju i nalazi se na položaju 0.
+b je verovatnoća da je korisnik izgubio prošlu partiju, a dobio onu pre nje. To zovem položaj 1.
+c je verovatnoća da je korisnik izgubio prošle 2 partije, a dobio onu pre nje. To zovem položaj 2.
+d je verovatnoća da je korisnik izgubio prošle 3 partije. To zovem položaj 4.
+
+Kada korisnik dobije partiju to ga vraća na položaj 0.
+
+Pp je verovatnoća da korisnik dobije partiju koja nije nameštena.
+Lp je verovatnoća da korisnik izgubi partiju koja nije nameštena.
+
+M je matrica dole. 
+M[i,j] (i je broj reda, od 0 do 3, je je broj kolone, od 0 do 3) je verovatnoća 
+da korisnik ode na položaj i sa položaja j.
+Na primer, M[0,3] = 1 zato što ako se korisnik nalazi u položaju 3 
+to znači da je izgubio prošle 3 partije, što znači da ima 100% šansu 
+da dobije narednu partiju. 
+M[0,2] = Pp zato što je šansa da korisnik ode na položaj 0 sa položaja 2 
+(položaj 0 znači da je korisnik dobio prošlu partiju, položaj 2 znači 
+da je izgubio prethodne 2 partije).
+M[1,2] = 0 zato što je nemoguće da korisnik ode na položaj 1 iz položaja 2.
+M[3,0] = 0 zato što je nemoguće da korisnik ode na položaj 3 iz položaja 0.
+M[1,0] = Lp zato što korisnik dolazi u položaj 1 iz položaja 0 tako što gubi partiju.
+M[2,1] = Lp zato što korisnik dolazi u položaj 2 iz položaja 1 tako što gubi partiju.
+Itd.
+
+
+Pp Pp Pp 1 |  |a|      |a| 
+Lp 0  0  0 |  |b|   =  |b|
+0  Lp 0  0 |  |b|      |c|
+0  0  Lp 0 |  |d|      |d|
+
+Pp-1 Pp Pp 1 |  |a|      |0| 
+Lp -1   0  0 |  |b|   =  |0|
+0  Lp  -1  0 |  |b|      |0|
+0  0   Lp -1 |  |d|      |0|
+
+
+Pošto znamo da je a+b+c+d=1 možemo da stavimo jedinice u nulti red. 
+
+1   1  1  1 |  |a|      |1| 
+Lp -1  0  0 |  |b|   =  |0|
+0  Lp -1  0 |  |b|      |0|
+0  0  Lp -1 |  |d|      |0|
+
+Ako dodam 3. red nultom redu, nulti red će biti
+1  1  1+Lp  0 
+
+drugi red je:
+0  Lp  -1   0
+
+Pošto u nultom redu želim da pretvorim 1+Lp u nulu množim 2. red sa 1+Lp i dodajem ga nultom redu. 
+Nulti red će biti:
+1  1+Lp(1+Lp) 0  0
+
+prvi red je  
+Lp   -1       0  0
+
+Ako pomnožim prvi red sa 1+Lp(1+Lp) i dodam ga nultom redu 
+nulti red će biti 
+1 + Lp(1 + Lp(1 + Lp)) 0 0 0 
+
+šansaPoložaja0 * (1 + Lp(1 + Lp(1+Lp))) = 1
+šansaPoložaja0 = 1.0 / (1 + Lp(1 + Lp(1 + Lp)))
+
+Prvo smo imali     1 + Lp
+onda               1 + Lp(1 + Lp)
+onda               1 + Lp(1 + Lp(1 + Lp))
+Obrazac je  1 + Lp*prošlaVrednost što sam uradio 3 puta zato što imamo 3 reda matrice.
+Imamo 3 reda matrice zato što je 3 maksimalan broj poraza pre nego što se pokloni pobeda. 
+
+
+Kada izračunam šansu položaja 0 (a) izračunaću šansu da je korisnik izgubio 3 puta zaredom.
+
+
+Pp-1 Pp Pp 1 |  |a|      |0| 
+Lp -1   0  0 |  |b|   =  |0|
+0  Lp  -1  0 |  |b|      |0|
+0  0   Lp -1 |  |d|      |0|
+
+
+Želim da pronađem d, jer d predstavlja šansu da je igrač izgubio 3 puta i da će biti poklonjena pobeda u narednoj rundi.
+
+Ignorišem nulti red.
+Množim 2. red sa Lp i dodajem ga poslednjem redu.
+Poslednji red će biti:
+0  Lp*Lp 0 -1
+
+Prvi red je: 
+Lp  -1   0  0
+Množim ga sa Lp*Lp i dodajem ga poslednjem redu.
+Poslednji red će tada biti:
+Lp*Lp*Lp  0  0 -1
+
+Što znači Lp*Lp*Lp*a - d = 0
+d = Lp*Lp*Lp*a
+a je 1.0 / (1 + Lp(1 + Lp(1 + Lp))) 
+
+
+
+ 
 Za zadate parametre (nakon 3 uzastopna poraza se poklanja pobeda, a u rundama gde se ne poklanja pobeda šansa za dobitak je 33%), 
-šansa da korisnik pobedi u nasumičnoj rundi u limesu kada broj odigranih partija teži beskonačno je oko 44.6%.
+šansa da korisnik pobedi u nasumičnoj rundi u limesu kada broj odigranih partija teži beskonačno je oko 41.3%.
 
 
 Funkcija calculateFairQuotients() računa koristi rezultat gore pomenute funkcije. 
@@ -46,12 +133,12 @@ Matematika iza koda koji se nalazi u ovoj funkciji je sledeća:
  
 	Ako je šansa da korisnik pobedi u nasumičnoj rundi u limesu kada broj odigranih partija teži beskonačnosti 44.6%, 
 	što znači da na 1000 odigranih rundi očekivano je da korisnik dobije 446 puta, tada je 
-	(1-0.446)(1-0.446)(1-0.446) * 1000 = 170 očekivan broj poklonjenih pobeda, što znači da je 
-	446 - 170 = 276 broj očekivanih nepoklonjenih pobeda. 
+	(1-0.413)(1-0.413)(1-0.413) * 1000 = 202 očekivan broj poklonjenih pobeda, što znači da je 
+	413 - 202 = 211 broj očekivanih nepoklonjenih pobeda. 
 	Sve poklonjene pobede su male, a što se tiče nepoklonjenih pobeda, 
-	276 * SMALL_WIN_PERCENTAGE / 100.0 je broj očekivanih nepoklonjenih malih pobeda,
-	276 * MEDIUM_WIN_PERCENTAGE / 100.0 je broj očekivanih srednjih pobeda,
-	276 * BIG_WIN_PERCENTAGE / 100.0 je broj očekivanih srednjih pobeda.
+	211 * SMALL_WIN_PERCENTAGE / 100.0 je broj očekivanih nepoklonjenih malih pobeda,
+	211 * MEDIUM_WIN_PERCENTAGE / 100.0 je broj očekivanih srednjih pobeda,
+	211 * BIG_WIN_PERCENTAGE / 100.0 je broj očekivanih srednjih pobeda.
 	
 	Računamo da korisnik ulaže 1 u svakoj od svojih 1000 rundi.
 	Kad računamo fer kvote, imamo jednačinu 

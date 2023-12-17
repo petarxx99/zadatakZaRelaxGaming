@@ -42,14 +42,17 @@ const {realWinningChance, realWinningChanceError} = calculateRealWinChance(WIN_P
 /* This function calculates the possibility that some win will occur, calculates fair quotient.
 It also calculates the percentage of small, medium and big wins among all wins that occur. */
 function calculateFairQuotients(){
-	const giftedWin = MyProbability.calculateLastStateProbability(WIN_PERCENTAGE, NUMBER_OF_MAX_CONSECUTIVE_LOSSES);
+	
+	const giftedWinAndWinProbability = MyProbability.calculateProbabilities(WIN_PERCENTAGE, NUMBER_OF_MAX_CONSECUTIVE_LOSSES);
+	const realWinningChance = giftedWinAndWinProbability.realWinningChance;
+	const giftedWin = giftedWinAndWinProbability.giftedWinChance;
+	
 	const winNotGifted = 1 - giftedWin;
 	
 	const chanceOfSmallWin = giftedWin + winNotGifted * WIN_PERCENTAGE * SMALL_WIN_PERCENTAGE / (100.0 * 100.0);
 	const chanceOfMediumWin = winNotGifted * WIN_PERCENTAGE * MEDIUM_WIN_PERCENTAGE / (100.0 * 100.0);
 	const chanceOfBigWin = winNotGifted * WIN_PERCENTAGE * BIG_WIN_PERCENTAGE / (100.0 * 100.0);
-	
-	const realWinningChance = chanceOfSmallWin + chanceOfMediumWin + chanceOfBigWin;
+
 	const howMuchEachTierContributes = 1.0 / NUMBER_OF_DIFFERENT_WINS;
 	
 	const smallWinQuotient = howMuchEachTierContributes / chanceOfSmallWin;

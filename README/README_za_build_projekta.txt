@@ -1,7 +1,6 @@
-Kada se nalazite u folderu iz koga vidite foldere src, public, README itd. otvorite terminal i ukucajte u njemu npm run build. 
+Kada se nalazite u folderu iz koga vidite foldere src, public, README itd. otvorite terminal i ukucajte u njemu npm i. 
+Zatim, ukucajte npm run build. 
 Sačekajte da se build završi. Onda ukucajte npm install -g serve. Nakon toga ukucajte serve -s build i idite na adresu koja vam se pokaže 
-u terminalu.
+u terminalu. Ako hoćete da tesirate projekat bez builda onda nakon npm i ukucajte npm start u terminal.
 
-When you are in the folder from which you can see folders called src, public, README etc. open the terminal and type npm run build.
-Wait until the build is finished. Type npm install -g serve into terminal. Then type serve -s build into terminal and 
-the project will be deployed. The address where the project is deployed will be written in the terminal.
+
