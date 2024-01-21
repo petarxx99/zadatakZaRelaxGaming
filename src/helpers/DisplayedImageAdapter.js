@@ -184,9 +184,10 @@ class DisplayedImageAdapter{
 		)});
 	}
 	
-	startSpinning(canvasHeight){
-		const periodInSeconds = 2;
-		const velocityInPixelsPerSecond = canvasHeight * 1.0 / periodInSeconds;
+	startSpinning(periodInSeconds){
+		const periodLength = this.array[0][0].ySize * this.array.length * 1.0;
+		
+		const velocityInPixelsPerSecond = periodLength / periodInSeconds;
 		this.array.forEach(oneDarray => {oneDarray.forEach(
 			displayedImage => displayedImage.setYVelocityInSeconds(velocityInPixelsPerSecond)
 		)}); 

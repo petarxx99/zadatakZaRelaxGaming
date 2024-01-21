@@ -15,6 +15,8 @@ function round2decimals(number){
 const BACKGROUND_COLOR = "beige";
 const WIN_CARD_COLOR = "gold";
 
+const SPINNING_PERIOD_IN_SECONDS = 1.2;
+
 const NUMBER_OF_ROWS = 3;
 const NUMBER_OF_COLUMNS = 5;
 const NUMBER_OF_MAX_CONSECUTIVE_LOSSES = 3;
@@ -460,7 +462,7 @@ function GameView(props){
 		setSpinningRightNow(true);
 		clearIntervalIfNotNull(stationaryCardsInterval);
 		
-		adapter?.startSpinning(canvasHeight);
+		adapter?.startSpinning(SPINNING_PERIOD_IN_SECONDS);
 		
 		spinningInterval = setInterval(() => {
 			paintCanvas();
