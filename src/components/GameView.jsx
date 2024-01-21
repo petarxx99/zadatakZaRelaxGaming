@@ -12,6 +12,9 @@ function round2decimals(number){
 	return Math.round(number * 100.0) / 100.0;
 }
 
+const BACKGROUND_COLOR = "beige";
+const WIN_CARD_COLOR = "gold";
+
 const NUMBER_OF_ROWS = 3;
 const NUMBER_OF_COLUMNS = 5;
 const NUMBER_OF_MAX_CONSECUTIVE_LOSSES = 3;
@@ -421,7 +424,9 @@ function GameView(props){
 					xSize: cardSize,
 					ySize: cardSize,
 					xVelocityPerSecond: 0,
-					yVelocityPerSecond: 0
+					yVelocityPerSecond: 0,
+					backgroundColor: BACKGROUND_COLOR,
+					winCardColor: WIN_CARD_COLOR
 				});
 			}
 		}
@@ -458,8 +463,7 @@ function GameView(props){
 		adapter?.startSpinning(canvasHeight);
 		
 		spinningInterval = setInterval(() => {
-			ctx.fillStyle = "blue";
-			ctx.fillRect(0,0, canvasWidth, canvasHeight);
+			paintCanvas();
 			adapter?.updateObjectsAnddisplayCards(ctx, IMAGE_RATIO, IMAGE_RATIO, TIME_BETWEEN_FRAMES, canvasHeight);
 		}, TIME_BETWEEN_FRAMES);
 		
@@ -500,8 +504,7 @@ function GameView(props){
 	}
 	
 	function showStationaryCards(){
-			ctx.fillStyle = "blue";
-			ctx.fillRect(0,0, canvasWidth, canvasHeight);
+			paintCanvas();
 			adapter?.displayCardsAndContainer(ctx, IMAGE_RATIO, IMAGE_RATIO);
 	}
 	
@@ -555,6 +558,12 @@ function GameView(props){
 		
 		return cards;
 	}
+	
+	function paintCanvas(){
+		ctx.fillStyle = BACKGROUND_COLOR;
+		ctx.fillRect(0,0, canvasWidth, canvasHeight);
+	}
+	
 /* ********************************************************************* */
 
 	const canvasRef = useRef();

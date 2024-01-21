@@ -145,9 +145,7 @@ class DisplayedImageAdapter{
 	}
 	
 	updateObjectsAnddisplayCards(ctx, xImageRatio, yImageRatio, timeIntervalInMiliseconds, heightOfContainer){
-		ctx.fillStyle = "blue";
-		ctx.fillRect(0,0, heightOfContainer, heightOfContainer);
-		
+
 		const potentialNewSrcRow = (this.lastDisplayedPicturesRow+1) % this.twoDArrayOfAllImages.length;
 		let outOfBoundsHappened = false;
 		

@@ -46,8 +46,8 @@ class DisplayedImage {
 			this.yAccelerationInSecondsSquared = 0.0;
 			this.slowestSpeedPerSecond = 0.0625;
 			
-			this.winCardColor = "yellow";
-			this.nonWinCardColor = "blue";
+			this.winCardColor = object.winCardColor;
+			this.nonWinCardColor = object.backgroundColor;
 		}
 		
 		drawYourself(ctx, xImageSizeRatio, yImageSizeRatio){
