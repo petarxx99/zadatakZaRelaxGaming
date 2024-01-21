@@ -4,6 +4,8 @@
 import {useRef, useEffect, useState } from 'react';
 import './GameView.css';
 import MyProbability from '../helpers/MyProbability.js';
+import DisplayedImage from '../helpers/DisplayedImage.js';
+import DisplayedImageAdapter from '../helpers/DisplayedImageAdapter.js';
 
 
 function round2decimals(number){
@@ -34,8 +36,6 @@ const HOUSE_EDGE = 0.05;
 const SMALL_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(SMALL_WIN);
 const MEDIUM_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(MEDIUM_WIN);
 const BIG_WIN_OFFER = getSpecificWinQuotientWithHouseEdge(BIG_WIN);
-
-const {realWinningChance, realWinningChanceError} = calculateRealWinChance(WIN_PERCENTAGE / 100.0);
 
 
 
@@ -142,14 +142,7 @@ function mapWhichWinToWinTierPercentage(whichWin){
 }
 
 
-/* This code is called when a player wins. */
-function doWin(betWonCallback, betsLostSinceWin, setAllCards){
-	betsLostSinceWin.current = 0;
-	const whichWin = calculateWhichWin();
-	displayWin(whichWin, setAllCards);
-	const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
-	betWonCallback(winQuotient);
-}
+
 
 /* This code is called when you want to give player the smallest win. */
 function doSmallWin(betWonCallback, betsLostSinceWin, setAllCards){
@@ -206,6 +199,14 @@ function displayWin(whichWin, setAllCards){
 	
 	const newCards = calculateNewCards(winningCard, {row, column});
 	setAllCards(newCards);
+}
+
+function getAllWinningCards(whichWin){
+	const winningCard = chooseWinningCard(whichWin);
+	const [row, column] = chooseRandomPosition();
+	
+	const newCards = calculateNewCards(winningCard, {row, column});
+	return newCards;
 }
 
 /* Returns an object with a field 'rows' that is a 2D array which contains a winning pattern of cards. 
@@ -269,6 +270,8 @@ function getLosingCards(){
 	return cards;
 }
 
+
+
 /* Returns a row with a winning pattern of cards. Arguments are the winning card and the column of the most left winning card.*/
 function getWinningRow(winningCard, column){
 	let winningRow = [];
@@ -294,6 +297,8 @@ function getWinningRow(winningCard, column){
 	return winningRow;
 }
 
+
+
 const NUMBER_OF_CARDS_TO_WIN = 3;
 
 const allPictures = [
@@ -309,6 +314,8 @@ const allPictures = [
 	{src: '/gold.png', tier: BIG_WIN},
 	{src: '/bagOfGold.png', tier: BIG_WIN}];
 	
+
+	
 function displayNoCards(xPicture, setAllCards){
 	let tempAllCards = {rows : []};
 	for(let i=0; i < NUMBER_OF_ROWS; i++){
@@ -322,32 +329,55 @@ function displayNoCards(xPicture, setAllCards){
 
 function GameView(props){
 
+	const NUMBER_OF_FRAMES = 60;
+	const TIME_BETWEEN_FRAMES = 1000.0 / NUMBER_OF_FRAMES;
+
 	function betWonCallback(winQuotient){
 		setBetIsHappening(false);
 		props.betWonCallback(winQuotient);
 	}
+	
+	function betLostCallback(){
+		setBetIsHappening(false);
+		props.betLostCallback();
+	}
+	
+	function afterSpinning(result){
+		if (result.win){
+			betWonCallback(result.quotient);
+		} else {
+			betLostCallback();	
+		}
+	}
+	
 
 	function startBet(){
-		props.betStartedCallback();
-		setBetIsHappening(true);
-		displayNoCards(xPicture, setAllCards);
+			props.betStartedCallback();
+			setBetIsHappening(true);
+			
+			const canvas = canvasRef.current;
+			if (ctx === null || ctx === undefined){
+				ctx = canvas.getContext('2d');
+			}
 		
-		setTimeout(() => {
+			let win = true;
+			let whichWin = 0;
+			
 			if (betsLostSinceWin.current >= NUMBER_OF_MAX_CONSECUTIVE_LOSSES){
-				doSmallWin(betWonCallback, betsLostSinceWin, setAllCards);	
+				betsLostSinceWin.current = 0;
+				whichWin = SMALL_WIN;
 			} else {
 				const clientWon = clientHasWon();
 				if (clientWon){
-					doWin(betWonCallback, betsLostSinceWin, setAllCards);
+					betsLostSinceWin.current = 0;
+					whichWin = calculateWhichWin();
 				} else {
 					betsLostSinceWin.current += 1;
-					displayLoss(setAllCards);
-					
-					setBetIsHappening(false);
-					props.betLostCallback();
+					win = false;
 				}
 			}
-		}, THREE_SECONDS);
+			
+			startSpinningCards(win, whichWin);
 	}
 	
 	const betsLostSinceWin = useRef(0);
@@ -358,27 +388,234 @@ function GameView(props){
 	
 	const [betIsHappening, setBetIsHappening] = useState(false);
 	
+	
+	
+	
+	let adapter = null;
+	
+	function displaySpinningCards(ctx){
+		const imageContainerRatio = 0.5;
+		
+		adapter?.displayCards(ctx, imageContainerRatio, imageContainerRatio);
+	}
+	const FIRST_STOP_ROW = NUMBER_OF_ROWS*2;
+	const NUMBER_OF_ROTATING_ROWS = NUMBER_OF_ROWS*3;
+	
+	function initCards(images){
+		
+		let cards = [];
+		
+		const numberOfVisibleRows = NUMBER_OF_ROWS + 1;
+		for(let i=0; i<numberOfVisibleRows; i++){
+			cards[i] = [];
+			for(let j=0; j<NUMBER_OF_COLUMNS; j++){
+				const startX = j * cardSize;
+				const startY = canvasHeight - (i+1) * cardSize;
+				
+				cards[i][j] = new DisplayedImage({
+					x: startX,
+					y: startY,
+					startX,
+					startY,
+					image: images[i][j],
+					xSize: cardSize,
+					ySize: cardSize,
+					xVelocityPerSecond: 0,
+					yVelocityPerSecond: 0
+				});
+			}
+		}
+		
+		const adapterInfo = {
+			arrayOfDisplayedImages: cards, 
+			twoDArrayOfAllImages: images, 
+			containerHeight: canvasHeight,
+			firstStopRow: FIRST_STOP_ROW
+			};
+			
+		return adapterInfo;
+	}
+	
+	function initAdapter(adapterInfo){
+		if (adapter == null){
+			adapter = new DisplayedImageAdapter(adapterInfo);
+		} else {
+			adapter.reset(adapterInfo);
+		}
+	}
+	
+	
+	function setInfoForSpinningCards(cards){
+		const adapterInfo = initCards(cards);
+		initAdapter(adapterInfo);
+	}	
+	
+	
+	function spinCards(result){
+		setSpinningRightNow(true);
+		clearIntervalIfNotNull(stationaryCardsInterval);
+		
+		adapter?.startSpinning(canvasHeight);
+		
+		spinningInterval = setInterval(() => {
+			ctx.fillStyle = "blue";
+			ctx.fillRect(0,0, canvasWidth, canvasHeight);
+			adapter?.updateObjectsAnddisplayCards(ctx, IMAGE_RATIO, IMAGE_RATIO, TIME_BETWEEN_FRAMES, canvasHeight);
+		}, TIME_BETWEEN_FRAMES);
+		
+		setTimeout(() => {
+			const timeToStopInMiliseconds = adapter.stopObjects(canvasHeight);
+			setTimeout(() => {
+				setSpinningRightNow(false);
+				clearIntervalIfNotNull(spinningInterval);
+				adapter?.spinningOver();
+				showStationaryCards();
+				afterSpinning(result);
+			}, timeToStopInMiliseconds + 50);
+			
+		}, 3000);
+	}
+	
+	function spinLosingCards(){
+		const cards = getLosingSpinningCards();
+		setInfoForSpinningCards(cards);
+		spinCards({win: false});
+	}
+	
+	function spinWinningCards(whichWin){
+		const winQuotient = getSpecificWinQuotientWithHouseEdge(whichWin);
+		
+		const cards = getSpinningWinningCards(whichWin);
+		setInfoForSpinningCards(cards);
+		
+		spinCards({win: true, quotient: winQuotient});
+	}
+	
+	function startSpinningCards(itIsAWin, whichWin){
+		if (itIsAWin){
+			spinWinningCards(whichWin);
+		} else {
+			spinLosingCards();
+		}
+	}
+	
+	function showStationaryCards(){
+			ctx.fillStyle = "blue";
+			ctx.fillRect(0,0, canvasWidth, canvasHeight);
+			adapter?.displayCardsAndContainer(ctx, IMAGE_RATIO, IMAGE_RATIO);
+	}
+	
+	function showStationaryLosingCards(){
+		const cards = getLosingSpinningCards();
+		setInfoForSpinningCards(cards);
+		showStationaryCards();
+	}
+
+	function showStationaryLosingCardsWithDelay(){
+		const cards = getLosingSpinningCards();
+		setInfoForSpinningCards(cards);
+		setTimeout(() => {showStationaryCards();}, 1000);
+	}
+	
+	function clearIntervalIfNotNull(interval){
+		if(interval != null){
+			clearInterval(interval);
+		}
+	}
+	
+	const IMAGE_RATIO = 0.5;
+	let spinningInterval = null;
+	let stationaryCardsInterval = null;
+	const [spinningRightNow, setSpinningRightNow] = useState(false);
+	const SPIN_TIME_IN_MILISECONDS = 4000;
+	let spinTimerMiliseconds = SPIN_TIME_IN_MILISECONDS;
+	/***************************************************************************************** */
+	
+	function getLosingSpinningCards(){
+		let images = [];
+		
+		for(let i=0; i<NUMBER_OF_ROTATING_ROWS; i++){
+			images[i] = [];
+			images[i] = getLosingRow();
+		}
+		return images;
+	}
+	
+	
+	function getSpinningWinningCards(whichWin){
+		const cards = getLosingSpinningCards();
+		const winningCards = getAllWinningCards(whichWin);
+		
+		for(let i=0; i<NUMBER_OF_ROWS; i++){
+			cards[i+FIRST_STOP_ROW] = [];
+			for(let j=0; j<NUMBER_OF_COLUMNS; j++){
+				cards[i+FIRST_STOP_ROW][j] = winningCards.rows[i][j];
+			} 
+		}
+		
+		return cards;
+	}
+/* ********************************************************************* */
+
+	const canvasRef = useRef();
+	let ctx = null;
+	
+		
 	useEffect(() => {
-		displayNoCards(xPicture, setAllCards);	
+
+		const canvas = canvasRef.current;
+		if (ctx === null || ctx === undefined){
+			ctx = canvas.getContext('2d');
+		}
+		showStationaryLosingCardsWithDelay();
 	}, []);
 	
 
 	
+	function createMatrixOfPictures(pictures){
+		let newDisplayedImages = [];
+		for(let i=0; i<NUMBER_OF_ROWS; i++){
+			newDisplayedImages[i] = [];
+			for(let j=0; j<NUMBER_OF_COLUMNS; j++){
+				newDisplayedImages[i][j] = {
+					src: pictures[i][j].src,
+					x: 0 
+				};
+			}
+		}
+	}
+	
+	
+	
+	let displayedImageAdapter = null;
+	
+
+	const calculateCanvasSize = () => Math.min(window.innerWidth, window.innerHeight)/2
+	
+	const [displayedImages, setDisplayedImages] = useState([]);
+	
+	
+	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+	const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+
+	
+	const canvasWidth = Math.min(window.innerWidth, window.innerHeight) / 2;
+	const canvasHeight = 1.0 * canvasWidth * NUMBER_OF_ROWS / NUMBER_OF_COLUMNS;
+	let cardSize = canvasHeight / NUMBER_OF_ROWS;
+	let fromTop = (canvasHeight - cardSize * NUMBER_OF_ROWS) / 2.0;
+
 	return (
 <div className="wrap">
 
-	<div className="rowsWrap" >
-			{allCards?.rows.map((row, iRow) => { return <div className="oneRow" key={iRow}> 
-				{row?.map((imageInfo, jColumn) => {return <div className={imageInfo.winCard? 'winCard' : ''} key={jColumn}>
-				<img src={imageInfo.src} width="60vw" height="60vw"  className={imageInfo.winCard? "winCard onePicture" : 'onePicture'}/> </div>})} 
-				</div>
-			})}
-	</div>
-
+	
 	
 		
 	<div className="buttonStartBet">
 		<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> ODIGRAJTE </button>
+	</div>
+	
+	<div>
+		<canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} background="white"></canvas>
 	</div>
 </div>
 	);
