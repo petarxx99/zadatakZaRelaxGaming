@@ -4,3 +4,4 @@ Sačekajte da se build završi. Onda ukucajte npm install -g serve. Nakon toga u
 u terminalu. Ako hoćete da tesirate projekat bez builda onda nakon npm i ukucajte npm start u terminal.
 
 
+
