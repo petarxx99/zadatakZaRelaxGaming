@@ -58,15 +58,15 @@ function MainView(){
 		
 		soundSuccess.play();
 		
-		if (winQuotient > 1.0){
-			setTimeout(() => {
+		
+		setTimeout(() => {
 				setShowingWinPicture(true);
 			
 				setTimeout(() => {
 					setShowingWinPicture(false);
 				}, ONE_AND_A_HALF_SECONDS);
-			}, ONE_AND_A_HALF_SECONDS);
-		}
+		}, ONE_AND_A_HALF_SECONDS);
+		
 	}
 	
 	const TWO_SECONDS = 2000;
