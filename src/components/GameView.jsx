@@ -14,20 +14,28 @@ function round2decimals(number){
 
 const BACKGROUND_COLOR = "beige";
 const WIN_CARD_COLOR = "gold";
+const NUMBER_OF_WIN_CARDS_IN_A_ROW = 3;
 
-const SPINNING_PERIOD_IN_SECONDS = 1.2;
 
 const NUMBER_OF_ROWS = 3;
 const NUMBER_OF_COLUMNS = 5;
 const NUMBER_OF_MAX_CONSECUTIVE_LOSSES = 3;
 const THREE_SECONDS = 3000;
 
+const NUM_OF_VISUALLY_DISPLAYED_ROWS = NUMBER_OF_ROWS + 1;
+
+const SPINNING_PERIOD_IN_SECONDS = 0.65;
+const TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS = 3000;
+const TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS = TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS / 1000.0;
+const NUMBER_OF_ROWS_TRAVELED = (NUM_OF_VISUALLY_DISPLAYED_ROWS * TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS) / SPINNING_PERIOD_IN_SECONDS;
+
 const SMALL_WIN = 1;
 const MEDIUM_WIN = 2;
 const BIG_WIN = 3;
 const LOSS = -1;
 
-const WIN_PERCENTAGE = 33;
+
+const WIN_PERCENTAGE = 60;
 const BIG_WIN_PERCENTAGE = 20;
 const MEDIUM_WIN_PERCENTAGE = 30;
 const SMALL_WIN_PERCENTAGE = 50;
@@ -54,9 +62,11 @@ function calculateFairQuotients(){
 	
 	const winNotGifted = 1 - giftedWin;
 	
-	const chanceOfSmallWin = giftedWin + winNotGifted * WIN_PERCENTAGE * SMALL_WIN_PERCENTAGE / (100.0 * 100.0);
-	const chanceOfMediumWin = winNotGifted * WIN_PERCENTAGE * MEDIUM_WIN_PERCENTAGE / (100.0 * 100.0);
-	const chanceOfBigWin = winNotGifted * WIN_PERCENTAGE * BIG_WIN_PERCENTAGE / (100.0 * 100.0);
+	const CONVERSION_FACTOR = 100.0 * 100.0;
+	
+	const chanceOfSmallWin = giftedWin + winNotGifted * WIN_PERCENTAGE * SMALL_WIN_PERCENTAGE / CONVERSION_FACTOR;
+	const chanceOfMediumWin = winNotGifted * WIN_PERCENTAGE * MEDIUM_WIN_PERCENTAGE / CONVERSION_FACTOR;
+	const chanceOfBigWin = winNotGifted * WIN_PERCENTAGE * BIG_WIN_PERCENTAGE / CONVERSION_FACTOR;
 
 	const howMuchEachTierContributes = 1.0 / NUMBER_OF_DIFFERENT_WINS;
 	
@@ -355,7 +365,9 @@ function GameView(props){
 		}
 	}
 	
-
+	/* 
+	This function gets called when a player activates another round.
+	*/
 	function startBet(){
 			props.betStartedCallback();
 			setBetIsHappening(true);
@@ -406,6 +418,15 @@ function GameView(props){
 	const FIRST_STOP_ROW = NUMBER_OF_ROWS*2;
 	const NUMBER_OF_ROTATING_ROWS = NUMBER_OF_ROWS*3;
 	
+	
+	/* 
+	This function receives winning or losing images as a 2D array.
+	The number of rows is the NUMBER_OF_ROWS+1, the number of rows is 
+	NUMBER_OF_ROWS. 
+	The reason why the number of rows is NUMBER_OF_ROWS + 1 
+	is because if you have, let's say, 3 rows when the cards are stationary,
+	you will see 4 rows at the same time when the cards are spinning.
+	*/
 	function initCards(images){
 		
 		let cards = [];
@@ -443,6 +464,10 @@ function GameView(props){
 		return adapterInfo;
 	}
 	
+	/* 
+	It creates a new adapter if there is none, or resets the current one 
+	with the adapterInfo data.
+	*/
 	function initAdapter(adapterInfo){
 		if (adapter == null){
 			adapter = new DisplayedImageAdapter(adapterInfo);
@@ -451,13 +476,19 @@ function GameView(props){
 		}
 	}
 	
-	
+	/* 
+	It accepts 2D array of visible cards and it uses that information to 
+	set up the adapter. 
+	*/
 	function setInfoForSpinningCards(cards){
 		const adapterInfo = initCards(cards);
 		initAdapter(adapterInfo);
 	}	
 	
-	
+	/* 
+	This function takes care of drawing cards on the canvas. 
+	This function assumes that adapter has the correct information.
+	*/
 	function spinCards(result){
 		setSpinningRightNow(true);
 		clearIntervalIfNotNull(stationaryCardsInterval);
@@ -479,8 +510,9 @@ function GameView(props){
 				afterSpinning(result);
 			}, timeToStopInMiliseconds + 50);
 			
-		}, 3000);
+		}, TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS);
 	}
+	
 	
 	function spinLosingCards(){
 		const cards = getLosingSpinningCards();
@@ -511,7 +543,7 @@ function GameView(props){
 	}
 	
 	function showStationaryLosingCards(){
-		const cards = getLosingSpinningCards();
+		const cards = getInitialSpinningCards();
 		setInfoForSpinningCards(cards);
 		showStationaryCards();
 	}
@@ -536,19 +568,79 @@ function GameView(props){
 	let spinTimerMiliseconds = SPIN_TIME_IN_MILISECONDS;
 	/***************************************************************************************** */
 	
-	function getLosingSpinningCards(){
+	//Gets initial spinning cards.
+	
+	function getInitialSpinningCards(){
+		return getAllLosingSpinningCards();
+	}
+	
+	 
+	//It creates all cards that will be spinning when a player should lose.
+	//No matter on which row the spin stops the player will lose.
+	
+	function getAllLosingSpinningCards(){
 		let images = [];
 		
 		for(let i=0; i<NUMBER_OF_ROTATING_ROWS; i++){
 			images[i] = [];
 			images[i] = getLosingRow();
 		}
+		
+		return images;
+	}
+	
+	 
+	//It creates all cards that will be spinning when a player should lose.
+	//There can be winning rows, but player won't stop on them.
+	
+	function getLosingSpinningCards(){
+		let images = getAllLosingSpinningCards();
+		
+		addAWinningRowThatWontBeStoppedOn(images);
+		return images;
+	}
+	
+	 
+	//The function takes in spinning images as an argument 
+	//and it adds a winning row in a place on which the spin won't be stopped on.
+	
+	function addAWinningRowThatWontBeStoppedOn(images){
+		const fromLastStopRowToFirstStopRow = NUMBER_OF_ROTATING_ROWS - NUMBER_OF_ROWS;
+		const random = Math.floor(Math.random() * fromLastStopRowToFirstStopRow);
+		const indexOfPointlessWin = (FIRST_STOP_ROW - 1 - 0 + NUMBER_OF_ROTATING_ROWS) % NUMBER_OF_ROTATING_ROWS;
+		
+		
+		images[indexOfPointlessWin] = [];
+		const randomCard = randomlyChooseACard();
+		const randomColumn = Math.floor(Math.random() * (NUMBER_OF_COLUMNS - NUMBER_OF_WIN_CARDS_IN_A_ROW));
+		images[indexOfPointlessWin] = getWinningRow(randomCard, randomColumn);
+	}
+	
+	 
+	//It creates all cards for spinning.
+	
+	function getRandomSpinningCards(){
+		let images = [];
+		
+		for(let i=0; i<NUMBER_OF_ROTATING_ROWS; i++){
+			images[i] = [];
+			for(let j=0; j<NUMBER_OF_COLUMNS; j++){
+				const randomIndex = Math.floor(Math.random() * allPictures.length);
+				const randomPicture = allPictures[randomIndex];
+				
+				images[i][j] = {src: randomPicture.src, winCard: false};
+			}
+		}
+		
 		return images;
 	}
 	
 	
+	//It creates all cards that will be spinning. 
+	//It takes as an argument a parameter that describes which win has occured.
+	 
 	function getSpinningWinningCards(whichWin){
-		const cards = getLosingSpinningCards();
+		const cards = getAllLosingSpinningCards();
 		const winningCards = getAllWinningCards(whichWin);
 		
 		for(let i=0; i<NUMBER_OF_ROWS; i++){
@@ -566,7 +658,7 @@ function GameView(props){
 		ctx.fillRect(0,0, canvasWidth, canvasHeight);
 	}
 	
-/* ********************************************************************* */
+// *********************************************************************
 
 	const canvasRef = useRef();
 	let ctx = null;
@@ -580,7 +672,6 @@ function GameView(props){
 		}
 		showStationaryLosingCardsWithDelay();
 	}, []);
-	
 
 	
 	function createMatrixOfPictures(pictures){
@@ -622,7 +713,7 @@ function GameView(props){
 	
 		
 	<div className="buttonStartBet">
-		<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> ODIGRAJTE </button>
+		<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> DO ANOTHER SPIN </button>
 	</div>
 	
 	<div>
@@ -637,4 +728,10 @@ function GameView(props){
 
 export default GameView;
 
+
+/*
+	
+	
+	
+	*/
 

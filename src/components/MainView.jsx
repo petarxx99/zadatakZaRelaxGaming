@@ -54,16 +54,19 @@ function MainView(){
 		const newCredit = creditTemporary.current + creditChange;
 		setCredit(newCredit);
 		setLastCreditChange(creditChange);
+		setBetIsHappening(false);
+		
 		soundSuccess.play();
 		
-		setBetIsHappening(false);
-		setTimeout(() => {
-			setShowingWinPicture(true);
-			
+		if (winQuotient > 1.0){
 			setTimeout(() => {
-				setShowingWinPicture(false);
+				setShowingWinPicture(true);
+			
+				setTimeout(() => {
+					setShowingWinPicture(false);
+				}, ONE_AND_A_HALF_SECONDS);
 			}, ONE_AND_A_HALF_SECONDS);
-		}, ONE_AND_A_HALF_SECONDS);
+		}
 	}
 	
 	const TWO_SECONDS = 2000;
@@ -106,13 +109,13 @@ function MainView(){
 		
 			<div className={'down'} >
 				<div className={'credit'}>
-					<label> <b>NOVAC KOJI IMATE {round2decimals(credit)} </b></label>
+					<label> <b>CREDIT {round2decimals(credit)} </b></label>
 					<label className={lastCreditChange <= 0? 'dontShow' : ''}> 
-					DOBILI STE {round2decimals(lastCreditChange)}! </label>
+					YOU WON {round2decimals(lastCreditChange)}! </label>
 				</div>
 			
 				<div className={'amountToBet'} >
-					<label className={betIsHappening? 'dontShow' : ''}> ULOG </label>
+					<label className={betIsHappening? 'dontShow' : ''}> AMOUNT TO BET </label>
 					<input	type="number" onKeyPress={event => {validateInputNumber(event, parseInt(amountToBet), credit)}}
       					value={amountToBet} 
       					onChange={event => changeAmountToBet(parseInt(event.target.value || 1))} 	

@@ -1,9 +1,21 @@
 Kao što je zadato, napravio sam da ako korisnik izgubi 3 opklade zaredom 4. dobija. 
-Napravio sam da je ta poklonjena pobeda mala pobeda (zadato je da imam 3 različite pobede - malu, srednju i veliku. 
-Napravio sam da ako korisnik izgubi 3 partije zaredom kada naredni put odigra poklanja mu se mala pobeda).
+Napravio sam da je ta poklonjena pobeda mala pobeda 
+(zadato je da imam 3 različite pobede - malu, srednju i veliku. 
+Napravio sam da ako korisnik izgubi 3 partije zaredom 
+kada naredni put odigra poklanja mu se mala pobeda).
+Konstanta koja odredjuje maksimalan broj poraza pre nego sto se poklanja pobeda 
+se nalazi u fajlu src/components/GameView.jsx i zove se NUMBER_OF_MAX_CONSECUTIVE_LOSSES.
+Ako želite promeniti maksimalan broj poraza zaredom 
+samo izmenite vrednost te promenljive i program će raditi kako treba.
 
-Napravio sam da je očekivani povraćaj novca korisniku 95% (na svakih 100 uloženih očekivano je da dobije nazad 95).
-Konstanta koja ovo određuje se nalazi u fajlu components/GameView.jsx, a konstanta se zove HOUSE_EDGE.
+
+Napravio sam da je očekivani povraćaj novca korisniku 95% 
+(na svakih 100 uloženih očekivano je da dobije nazad 95).
+Konstanta koja ovo određuje se nalazi u fajlu components/GameView.jsx,
+a konstanta se zove HOUSE_EDGE.
+Ako želite da promenite očekivani povraćaj novca korisniku 
+samo promenite vrednost HOUSE_EDGE konstante.
+
 
 
 Napravio sam da je šansa da igrač dobije rundu koja nije nameštena 33% (konstanta WIN_PERCENTAGE iz components/GameView.jsx ovo određuje). 
