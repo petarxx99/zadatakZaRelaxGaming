@@ -64,7 +64,6 @@ class DisplayedImage {
 				yImage = 0;
 			}
 			
-			console.log("y: " + this.y);
 			ctx.drawImage(this.image.htmlImageElement, xImage, yImage, xImageSize, yImageSize);
 		}
 		
@@ -140,7 +139,6 @@ class DisplayedImage {
 			const distanceWithoutCorrection = numberOfRows * this.ySize;
 			
 			const endY = this.ySize * numberOfRowsAbove;
-			//const correction = endY - this.y;
 			const correction = -((this.y+this.ySize) % this.ySize);
 			
 			const distance = distanceWithoutCorrection + correction;
@@ -148,28 +146,6 @@ class DisplayedImage {
 		}
 		
 		
-		stopAfterDistance(distance){
-		/* 
-		distance = (at^2)/2 + Vo t
-		t = (Vresult - Vo)/a 
-		t = Vchange / a 
-		
-		distance = a Vchange^2 / 2a^2  +  Vo Vchange / a
-		distance = Vchange^2 / 2a  +  Vo Vchange / a
-		distance = (Vchange^2 + 2Vo Vchange) / 2a
-		a = (Vchange^2 + 2Vo Vchange) / 2distance
-		*/
-		
-			const changeInVelocity = this.slowestSpeedPerSecond - this.yVelocityPerSecond;
-			const acceleration = 
-			(changeInVelocity * changeInVelocity + 2 * this.yVelocityPerSecond * changeInVelocity) / 
-				(2*distance);
-			this.yAccelerationInSecondsSquared = acceleration;
-			
-			const secondsToMiliseconds = 1000;
-			const timeInMiliseconds = changeInVelocity * secondsToMiliseconds / acceleration;		
-			return timeInMiliseconds;
-		}
 		
 		calculateAccelerationAndTimeToStop(distance){
 			/* 
