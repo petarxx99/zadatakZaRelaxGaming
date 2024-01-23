@@ -551,7 +551,7 @@ function GameView(props){
 	function showStationaryLosingCardsWithDelay(){
 		const cards = getLosingSpinningCards();
 		setInfoForSpinningCards(cards);
-		setTimeout(() => {showStationaryCards();}, 1000);
+		setTimeout(() => {showStationaryCards();}, 1500);
 	}
 	
 	function clearIntervalIfNotNull(interval){
