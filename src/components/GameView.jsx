@@ -713,7 +713,7 @@ function GameView(props){
 	
 		
 	<div className="buttonStartBet">
-		<button onClick={startBet} className={betIsHappening? 'dontShow' : ''}> DO ANOTHER SPIN </button>
+		<button onClick={startBet} className={betIsHappening? 'dontShow' : 'spinButton'}> <b>DO ANOTHER SPIN</b> </button>
 	</div>
 	
 	<div>
