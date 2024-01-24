@@ -709,7 +709,7 @@ function GameView(props){
 	const [windowHeight, setWindowHeight] = useState(window.innerHeight);
 
 	
-	const canvasWidth = Math.min(window.innerWidth, window.innerHeight) / 2;
+	const canvasWidth = Math.min(window.innerWidth, window.innerHeight) * 6 / 10;
 	const canvasHeight = 1.0 * canvasWidth * NUMBER_OF_ROWS / NUMBER_OF_COLUMNS;
 	let cardSize = canvasHeight / NUMBER_OF_ROWS;
 	let fromTop = (canvasHeight - cardSize * NUMBER_OF_ROWS) / 2.0;
