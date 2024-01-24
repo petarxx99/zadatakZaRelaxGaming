@@ -30,9 +30,9 @@ const TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS = TIME_BEFORE_TELLING_IT_TO_STOP
 const NUMBER_OF_ROWS_TRAVELED = (NUM_OF_VISUALLY_DISPLAYED_ROWS * TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS) / SPINNING_PERIOD_IN_SECONDS;
 const CARD_TURNOVER_BEFORE_STOPPING = 2;
 
-const CARDS_TO_CHANGE_WHILE_DECCELERATING = 7;
+const CARDS_TO_CHANGE_WHILE_DECCELERATING = 8;
 
-const DELAY_AFTER_SPIN_IN_MILISECONDS = 300;
+const DELAY_AFTER_SPIN_IN_MILISECONDS = 400;
 
 const SMALL_WIN = 1;
 const MEDIUM_WIN = 2;
@@ -717,9 +717,6 @@ function GameView(props){
 	return (
 <div className="wrap">
 
-	
-	
-		
 	<div className="buttonStartBet">
 		<button onClick={startBet} className={betIsHappening? 'dontShow' : 'spinButton'}> <b>DO ANOTHER SPIN</b> </button>
 	</div>
@@ -727,6 +724,8 @@ function GameView(props){
 	<div>
 		<canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} background="white"></canvas>
 	</div>
+		
+	
 </div>
 	);
 	
