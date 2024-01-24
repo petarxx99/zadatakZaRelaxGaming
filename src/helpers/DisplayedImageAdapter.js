@@ -5,14 +5,11 @@ class DisplayedImageAdapter{
 	
 	
 	constructor(object){
-		this.array = object.arrayOfDisplayedImages;
-		this.containerHeight = object.containerHeight;
-		this.twoDArrayOfAllImages = object.twoDArrayOfAllImages;
-		this.firstStopRow = object.firstStopRow;
-		
-		this.lastDisplayedPicturesRow = this.array.length - 1;
-		
+		this.reset(object);
 	}	
+	
+	
+	
 	
 	reset(object){
 		this.array = object.arrayOfDisplayedImages;
@@ -21,7 +18,47 @@ class DisplayedImageAdapter{
 		this.firstStopRow = object.firstStopRow;
 		
 		this.lastDisplayedPicturesRow = this.array.length - 1;
+		this.changedCards = 0;
+		
+		this.timeSpinningInSeconds = object.timeSpinningInSeconds;
+		this.cardTurnoverBeforeStopping = object.cardTurnoverBeforeStopping;
+		
+		this.cardsToChangeWhileDeccelerating = this.firstStopRow;
+		this.numberOfChangedCardsBeforeDeccelerating = this.cardTurnoverBeforeStopping * this.twoDArrayOfAllImages.length;
+		this.numberOfChangedCardsBeforeStopping = this.numberOfChangedCardsBeforeDeccelerating + this.cardsToChangeWhileDeccelerating;
+	
+		this.distanceTraveledWhileDeccelerating = this.array[0][0].ySize * this.cardsToChangeWhileDeccelerating;
+		this.yVelocity = this.numberOfChangedCardsBeforeDeccelerating * this.array[0][0].ySize / this.timeSpinningInSeconds;
+		
+		this.changeInSpeed = this.array[0][0].slowestSpeedPerSecond - this.yVelocity;
+		this.calculateAccelerationToStop(this.distanceTraveledWhileDeccelerating, this.changeInSpeed, this.yVelocity);
 	}
+	
+	
+	calculateAccelerationToStop(distanceTraveledWhileDeccelerating, changeInSpeed, startSpeed){
+				/* 
+		distance = (at^2)/2 + Vo t
+		t = (Vresult - Vo)/a 
+		t = Vchange / a 
+		
+		distance = a Vchange^2 / 2a^2  +  Vo Vchange / a
+		distance = Vchange^2 / 2a  +  Vo Vchange / a
+		distance = (Vchange^2 + 2Vo Vchange) / 2a
+		a = (Vchange^2 + 2Vo Vchange) / 2distance
+		*/
+		
+			
+			const acceleration = 
+			(changeInSpeed * changeInSpeed + 2 * startSpeed * changeInSpeed) / 
+				(2*distanceTraveledWhileDeccelerating);
+			
+			const secondsToMiliseconds = 1000;
+			const timeInMiliseconds = changeInSpeed * secondsToMiliseconds / acceleration;
+			this.accelerationToStop = acceleration;
+			this.deccelerationTimeInMiliseconds = timeInMiliseconds;		
+			
+	}
+	
 
 	
 	set2DArrayOfImages(images){
@@ -32,40 +69,6 @@ class DisplayedImageAdapter{
 			}
 		}
 	}
-	
-	
-	
-	
-	stopObjects(heightOfContainer){
-		const numberOfDisplayedRows = this.array.length;
-		const numberOfPictureRows = this.twoDArrayOfAllImages.length;
-		
-		let currentFirstRow =  this.lastDisplayedPicturesRow - (numberOfDisplayedRows - 1);
-		if (currentFirstRow < 0){
-			currentFirstRow += numberOfPictureRows;
-		}
-		
-		
-		let rowDifference = this.firstStopRow - currentFirstRow;
-		if (rowDifference <= 0){
-			rowDifference += numberOfPictureRows;
-		}
-		
-		const firstArrayRow = this.findFirstArrayRow();
-		const arrayToBeOnTheBottom = (firstArrayRow + rowDifference-1) % this.array.length;
-		const numberOfRowsAbove = this.array.length - 2;
-		
-		const stopInfo = this.array[arrayToBeOnTheBottom][0].accelerationAndTimeToStopAfterNumberOfRows(rowDifference, numberOfRowsAbove);
-		
-		const timeBeforeStoppingInMiliseconds = stopInfo.timeInMiliseconds;
-		const accelerationToStop = stopInfo.acceleration;
-		
-		this.array.forEach(oneDarray => {oneDarray.forEach(
-			displayedImage => displayedImage.setNewAcceleration(accelerationToStop)
-		)});
-		
-		return timeBeforeStoppingInMiliseconds;
-	} 
 	
 	
 	spinOverResetImages(){
@@ -119,30 +122,7 @@ class DisplayedImageAdapter{
 		return firstRow;
 	}
 	
-	updateObjects(timeIntervalInMiliseconds, heightOfContainer){
-		const potentialNewSrcRow = (this.lastDisplayedPicturesRow+1) % this.twoDArrayOfAllImages.length;
-		let outOfBoundsHappened = false;
-		
-		for(let i=0; i<this.array.length; i++){
-			for(let j=0; j<this.array[i].length; j++){
-				const potentialNewSrc = this.twoDArrayOfAllImages[potentialNewSrcRow][j];
-				
-				const outOfBounds = this.array[i][j].updateYourself(
-					timeIntervalInMiliseconds, 
-					potentialNewSrc, 
-					heightOfContainer);
-					
-					
-				if (outOfBounds){
-					outOfBoundsHappened = true;
-				}
-			}
-		}
-		
-		if (outOfBoundsHappened){
-			this.lastDisplayedPicturesRow = potentialNewSrcRow;
-		}
-	}
+	
 	
 	updateObjectsAnddisplayCards(ctx, xImageRatio, yImageRatio, timeIntervalInMiliseconds, heightOfContainer){
 
@@ -169,6 +149,13 @@ class DisplayedImageAdapter{
 		
 		if (outOfBoundsHappened){
 			this.lastDisplayedPicturesRow = potentialNewSrcRow;
+			this.changedCards++;
+			
+			if (this.changedCards === this.numberOfChangedCardsBeforeDeccelerating){
+				this.array.forEach(oneDarray => {oneDarray.forEach(
+					displayedImage => displayedImage.setNewAcceleration(this.accelerationToStop)
+				)});
+			}
 		}
 	}
 	
@@ -184,12 +171,10 @@ class DisplayedImageAdapter{
 		)});
 	}
 	
-	startSpinning(periodInSeconds){
-		const periodLength = this.array[0][0].ySize * this.array.length * 1.0;
-		
-		const velocityInPixelsPerSecond = periodLength / periodInSeconds;
+	startSpinning(){
+	
 		this.array.forEach(oneDarray => {oneDarray.forEach(
-			displayedImage => displayedImage.setYVelocityInSeconds(velocityInPixelsPerSecond)
+			displayedImage => displayedImage.setYVelocityInSeconds(this.yVelocity)
 		)}); 
 	}
 	

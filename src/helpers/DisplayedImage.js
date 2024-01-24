@@ -117,23 +117,6 @@ class DisplayedImage {
 		}
 	
 	
-	
-		stopAtY(yAtWhichWeStop, heightOfContainer){
-			let distance = yAtWhichWeStop;
-			if (yAtWhichWeStop < this.y){
-				distance += heightOfContainer;
-			}
-			
-			this.stopAfterDistance(distance);
-		}
-		
-		stopAfterNumberOfRows(numberOfRows){
-			const distanceWithoutCorrection = numberOfRows * this.ySize;
-			const correction = this.y % this.ySize;
-			
-			const distance = distanceWithoutCorrection - correction;
-			return this.stopAfterDistance(distance);
-		}
 		
 		accelerationAndTimeToStopAfterNumberOfRows(numberOfRows, numberOfRowsAbove){
 			const distanceWithoutCorrection = numberOfRows * this.ySize;
@@ -146,28 +129,7 @@ class DisplayedImage {
 		}
 		
 		
-		
-		calculateAccelerationAndTimeToStop(distance){
-			/* 
-		distance = (at^2)/2 + Vo t
-		t = (Vresult - Vo)/a 
-		t = Vchange / a 
-		
-		distance = a Vchange^2 / 2a^2  +  Vo Vchange / a
-		distance = Vchange^2 / 2a  +  Vo Vchange / a
-		distance = (Vchange^2 + 2Vo Vchange) / 2a
-		a = (Vchange^2 + 2Vo Vchange) / 2distance
-		*/
-		
-			const changeInVelocity = this.slowestSpeedPerSecond - this.yVelocityPerSecond;
-			const acceleration = 
-			(changeInVelocity * changeInVelocity + 2 * this.yVelocityPerSecond * changeInVelocity) / 
-				(2*distance);
-			
-			const secondsToMiliseconds = 1000;
-			const timeInMiliseconds = changeInVelocity * secondsToMiliseconds / acceleration;		
-			return {acceleration, timeInMiliseconds};
-		}
+	
 		
 		stopAndMoveTo(y){
 			this.y = y;

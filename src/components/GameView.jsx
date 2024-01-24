@@ -25,9 +25,10 @@ const THREE_SECONDS = 3000;
 const NUM_OF_VISUALLY_DISPLAYED_ROWS = NUMBER_OF_ROWS + 1;
 
 const SPINNING_PERIOD_IN_SECONDS = 0.6857;
-const TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS = 3000;
+const TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS = 4000;
 const TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS = TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS / 1000.0;
 const NUMBER_OF_ROWS_TRAVELED = (NUM_OF_VISUALLY_DISPLAYED_ROWS * TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS) / SPINNING_PERIOD_IN_SECONDS;
+const CARD_TURNOVER_BEFORE_STOPPING = 2;
 
 const SMALL_WIN = 1;
 const MEDIUM_WIN = 2;
@@ -458,7 +459,9 @@ function GameView(props){
 			arrayOfDisplayedImages: cards, 
 			twoDArrayOfAllImages: images, 
 			containerHeight: canvasHeight,
-			firstStopRow: FIRST_STOP_ROW
+			firstStopRow: FIRST_STOP_ROW,
+			timeSpinningInSeconds: TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS / 1000.0,
+			cardTurnoverBeforeStopping: CARD_TURNOVER_BEFORE_STOPPING
 			};
 			
 		return adapterInfo;
@@ -501,7 +504,7 @@ function GameView(props){
 		}, TIME_BETWEEN_FRAMES);
 		
 		setTimeout(() => {
-			const timeToStopInMiliseconds = adapter.stopObjects(canvasHeight);
+			const timeToStopInMiliseconds = adapter.deccelerationTimeInMiliseconds;
 			setTimeout(() => {
 				setSpinningRightNow(false);
 				clearIntervalIfNotNull(spinningInterval);
