@@ -23,9 +23,10 @@ class DisplayedImageAdapter{
 		this.timeSpinningInSeconds = object.timeSpinningInSeconds;
 		this.cardTurnoverBeforeStopping = object.cardTurnoverBeforeStopping;
 		
-		this.cardsToChangeWhileDeccelerating = this.firstStopRow;
-		this.numberOfChangedCardsBeforeDeccelerating = this.cardTurnoverBeforeStopping * this.twoDArrayOfAllImages.length;
-		this.numberOfChangedCardsBeforeStopping = this.numberOfChangedCardsBeforeDeccelerating + this.cardsToChangeWhileDeccelerating;
+		this.cardsToChangeWhileDeccelerating = object.cardsToChangeWhileDeccelerating;
+		this.numberOfChangedCardsBeforeStopping = this.cardTurnoverBeforeStopping * this.twoDArrayOfAllImages.length + this.firstStopRow;
+		this.numberOfChangedCardsBeforeDeccelerating = this.numberOfChangedCardsBeforeStopping - this.cardsToChangeWhileDeccelerating;
+	
 	
 		this.distanceTraveledWhileDeccelerating = this.array[0][0].ySize * this.cardsToChangeWhileDeccelerating;
 		this.yVelocity = this.numberOfChangedCardsBeforeDeccelerating * this.array[0][0].ySize / this.timeSpinningInSeconds;

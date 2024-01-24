@@ -25,10 +25,14 @@ const THREE_SECONDS = 3000;
 const NUM_OF_VISUALLY_DISPLAYED_ROWS = NUMBER_OF_ROWS + 1;
 
 const SPINNING_PERIOD_IN_SECONDS = 0.6857;
-const TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS = 4000;
+const TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS = 3000;
 const TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS = TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS / 1000.0;
 const NUMBER_OF_ROWS_TRAVELED = (NUM_OF_VISUALLY_DISPLAYED_ROWS * TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS) / SPINNING_PERIOD_IN_SECONDS;
 const CARD_TURNOVER_BEFORE_STOPPING = 2;
+
+const CARDS_TO_CHANGE_WHILE_DECCELERATING = 7;
+
+const DELAY_AFTER_SPIN_IN_MILISECONDS = 300;
 
 const SMALL_WIN = 1;
 const MEDIUM_WIN = 2;
@@ -460,8 +464,9 @@ function GameView(props){
 			twoDArrayOfAllImages: images, 
 			containerHeight: canvasHeight,
 			firstStopRow: FIRST_STOP_ROW,
-			timeSpinningInSeconds: TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS / 1000.0,
-			cardTurnoverBeforeStopping: CARD_TURNOVER_BEFORE_STOPPING
+			timeSpinningInSeconds: TIME_BEFORE_TELLING_IT_TO_STOP_IN_SECONDS,
+			cardTurnoverBeforeStopping: CARD_TURNOVER_BEFORE_STOPPING,
+			cardsToChangeWhileDeccelerating: CARDS_TO_CHANGE_WHILE_DECCELERATING
 			};
 			
 		return adapterInfo;
@@ -511,7 +516,7 @@ function GameView(props){
 				adapter?.spinningOver();
 				showStationaryCards();
 				afterSpinning(result);
-			}, timeToStopInMiliseconds + 50);
+			}, timeToStopInMiliseconds + DELAY_AFTER_SPIN_IN_MILISECONDS);
 			
 		}, TIME_BEFORE_TELLING_IT_TO_STOP_IN_MILISECONDS);
 	}
